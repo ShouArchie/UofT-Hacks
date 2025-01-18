@@ -1,77 +1,151 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
-const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+const ArgueMateAuthPage: React.FC = () => {
+  const [isLogin, setIsLogin] = useState(true)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!email || !password) {
-      setError('Both email and password are required.');
-      return;
-    }
-
-    setError(null);
-    console.log('Email:', email, 'Password:', password);
-
-    if (email === 'test@example.com' && password === 'password') {
-      alert('Login successful!');
+    event.preventDefault()
+    if (isLogin) {
+      if (!email || !password) {
+        setError('Both email and password are required.')
+        return
+      }
+      console.log('Login:', email, password)
+      alert('Login successful!')
     } else {
-      setError('Invalid email or password.');
+      if (!name || !email || !password || !confirmPassword) {
+        setError('All fields are required.')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
+        return
+      }
+      console.log('Signup:', name, email, password)
+      alert('Signup successful!')
     }
-  };
+    setError(null)
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 font-poppins">
-      <h1 className="text-2xl font-bold mb-6 font-poppins">Login</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm"
-      >
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 font-poppins">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-poppins"
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 font-poppins">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-poppins"
-          />
-        </div>
-        {error && <p className="text-red-500 text-sm mb-4 font-poppins">{error}</p>}
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 font-poppins"
-        >
-          Login
-        </button>
-      </form>
-    </div>
-  );
-};
+    <div className="min-h-screen bg-[#FF8D58] font-['Poppins',sans-serif] text-[#FFEBD0]">
+      {/* Header */}
+      <header className="flex justify-between items-center p-6">
+        <h1 className="text-3xl font-light">ArgueMate</h1>
+        <nav className="space-x-8">
+          <a href="#" className="hover:opacity-80">About</a>
+          <button 
+            onClick={() => setIsLogin(false)}
+            className="bg-[#FFEBD0] text-[#FF8D58] px-6 py-2 rounded-full hover:opacity-90 transition-colors"
+          >
+            Sign Up
+          </button>
+        </nav>
+      </header>
 
-export default LoginPage;
+      {/* Main Content */}
+      <main className="flex flex-col items-center justify-center px-4 pt-20">
+        {/* Logo and Tagline */}
+        <div className="text-center mb-12">
+          <h2 className="text-6xl font-light mb-4">ArgueMate</h2>
+          <p className="text-2xl italic">A new perspective on dating</p>
+        </div>
+
+        {/* Auth Form */}
+        <div className="w-full max-w-md bg-[#FFEBD0]/10 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+          <h3 className="text-3xl font-light text-center mb-8">
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!isLogin && (
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-3 bg-[#FFEBD0]/20 border border-[#FFEBD0]/30 rounded-xl text-[#FFEBD0] placeholder-[#FFEBD0]/60 focus:outline-none focus:ring-2 focus:ring-[#FFEBD0]/50 focus:border-transparent"
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 bg-[#FFEBD0]/20 border border-[#FFEBD0]/30 rounded-xl text-[#FFEBD0] placeholder-[#FFEBD0]/60 focus:outline-none focus:ring-2 focus:ring-[#FFEBD0]/50 focus:border-transparent"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder={isLogin ? "Enter your password" : "Create a password"}
+                className="w-full px-4 py-3 bg-[#FFEBD0]/20 border border-[#FFEBD0]/30 rounded-xl text-[#FFEBD0] placeholder-[#FFEBD0]/60 focus:outline-none focus:ring-2 focus:ring-[#FFEBD0]/50 focus:border-transparent"
+              />
+            </div>
+            {!isLogin && (
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder="Confirm your password"
+                  className="w-full px-4 py-3 bg-[#FFEBD0]/20 border border-[#FFEBD0]/30 rounded-xl text-[#FFEBD0] placeholder-[#FFEBD0]/60 focus:outline-none focus:ring-2 focus:ring-[#FFEBD0]/50 focus:border-transparent"
+                />
+              </div>
+            )}
+            {error && <p className="text-red-300 text-sm">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-[#FFEBD0] text-[#FF8D58] py-3 px-6 rounded-full text-lg font-medium hover:opacity-90 transition-colors duration-300"
+            >
+              {isLogin ? 'Find Love' : 'Sign Up'}
+            </button>
+          </form>
+          <p className="mt-6 text-center text-sm">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="font-medium hover:underline focus:outline-none"
+            >
+              {isLogin ? 'Sign up' : 'Log in'}
+            </button>
+          </p>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default ArgueMateAuthPage
+
