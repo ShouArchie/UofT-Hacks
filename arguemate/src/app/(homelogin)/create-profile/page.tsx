@@ -1,9 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-//import { createProfile } from '@/app/api/profile/createProfile'; // Updated import
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { createProfile } from '@/app/api/profile/createProfile'
+
+const conflictQuestions = [
+  "Your partner dreams of being a goat farmer in the Alps, but you're all about city life with coffee shops and reliable Wi-Fi. What steps would you take to find a middle ground?",
+  'Your partner bought a life-sized inflatable dinosaur "because it was a great deal." How would you address their spending habits without stomping on their dino-sized joy?',
+  'Your partner says "nothing\'s wrong" but sighs loudly every five minutes. What steps would you take to get to the root of their feelings?',
+  "Your partner gets upset whenever you mention your work buddy, Sam, who happens to be a 70-year-old model. How would you handle their jealousy constructively?",
+  'Your partner\'s mom keeps comparing you to her "perfect" basketball player. How would you establish healthy boundaries while keeping the peace?',
+  'Your partner critiques your cooking every time with phrases like, "It\'s… creative." How would you express your feelings about their comments and find a solution?',
+  'Your partner thinks gifting socks is romantic, but you value quality time. How would you bridge the gap between your different love languages?',
+  "You want a relaxing beach vacation, but your partner insists on hiking up a volcano. How do you avoid turning the trip into a disaster movie?",
+  "Your partner lets the dog sleep in the bed, and now you're clinging to the edge of the mattress for dear life. How do you reclaim your spot without sparking a custody battle?",
+  "You suggest a comedy, and they pick a 4-hour documentary about medieval farming. How do you settle on something without it becoming the next great debate?",
+  "Your partner hits snooze 47 times every morning, and you've started dreaming about hiding the alarm. How do you address this without escalating to a 6 a.m. shouting match?",
+  'They want to "experiment" in the kitchen, and now you\'re eating spaghetti tacos for the third time this week. How do you diplomatically encourage a return to recipes?',
+  "You love sleeping in a pitch-black room, and they insist on having the TV on all night. How do you negotiate a truce without losing sleep?",
+  "You're always cold, and they're always hot. How do you find a solution before the thermostat becomes a battleground?",
+  "Your partner insists on hoarding all the pillows, leaving you with a flat pancake. How do you reclaim your fair share of cushion real estate?",
+];
+
+function getRandomQuestions(questions: string[], count: number): string[] {
+  const shuffled = [...questions].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
 
 interface SessionUser {
   name?: string | null;
@@ -16,8 +39,7 @@ export default function CreateProfile() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<{
     preferredName: string;
     age: string;
@@ -27,41 +49,49 @@ export default function CreateProfile() {
     occupation: string;
     debateStyle: string;
     communicationPreference: string;
-    photo: File | null; // Allow `File` or `null`
-  }>({
-    preferredName: '',
-    age: '',
-    gender: '',
-    city: '',
-    bio: '',
-    occupation: '',
-    debateStyle: '',
-    communicationPreference: '',
-    photo: null,
+    questions: string[];
+    answers: string[];
+  }>(() => {
+    const selectedQuestions = getRandomQuestions(conflictQuestions, 3);
+    return {
+      preferredName: "",
+      age: "",
+      gender: "",
+      city: "",
+      bio: "",
+      occupation: "",
+      debateStyle: "",
+      communicationPreference: "",
+      questions: selectedQuestions,
+      answers: ["", "", ""],
+    };
   });
-  
 
-  const totalSteps = 9; // Increase step count to include photo upload step
+  const totalSteps = 11; // Updated total steps (removed photo upload step)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
   }, [status, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      setFormData((prevState) => ({ ...prevState, photo: file }));
-      setPhotoPreview(URL.createObjectURL(file)); // Show photo preview
+    if (name.startsWith("answer")) {
+      const index = parseInt(name.slice(-1)) - 1;
+      setFormData((prevState) => ({
+        ...prevState,
+        answers: prevState.answers.map((ans, i) => (i === index ? value : ans)),
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
     }
   };
 
@@ -75,84 +105,52 @@ export default function CreateProfile() {
 
     const user = session?.user as SessionUser | undefined;
     if (!user?.id) {
-      setError('User ID not found in session. Please try logging in again.');
+      setError("User ID not found in session. Please try logging in again.");
       return;
     }
 
     // Validate required fields
-    if (!formData.preferredName || !formData.age || !formData.photo) {
-      setError('Please fill out all required fields and upload a photo.');
-      console.log('Form Data:', formData);
+    if (!formData.preferredName || !formData.age) {
+      setError("Please fill out all required fields.");
+      console.log("Form Data:", formData);
       return;
     }
 
-    let photoPath = '';
-    if (formData.photo) {
-      const photoData = new FormData();
-      photoData.append('photo', formData.photo);
-      photoData.append('userId', user.id);
-
-      try {
-        const photoResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: photoData,
-        });
-
-        if (!photoResponse.ok) {
-          throw new Error('Photo upload failed.');
-        }
-
-        const photoResult = await photoResponse.json();
-        photoPath = photoResult.photoPath;
-      } catch (err) {
-        console.error('Photo upload error:', err);
-        setError('Failed to upload photo. Please try again.');
-        return;
-      }
-    }
-
     const profileData = {
-      ...formData,
-      photo: photoPath, // Use the uploaded photo path
-      age: parseInt(formData.age, 10),
       userId: user.id,
+      ...formData,
+      age: parseInt(formData.age, 10),
+      conflictQuestions: formData.questions,
+      conflictAnswers: formData.answers,
     };
 
     try {
-      const response = await fetch('/api/profile/createProfile', { // Updated fetch call
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileData),
-      });
+      const result = await createProfile(profileData);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error:', errorText);
-        setError('Failed to save profile. Please try again.');
-        return;
+      if (result.success) {
+        console.log("Profile created successfully:", result.profile);
+        router.push("/home"); // Redirect to home page after profile creation
+      } else {
+        setError("Failed to save profile. Please try again.");
       }
-
-      const result = await response.json();
-      console.log('Profile created successfully:', result);
-      router.push('/profiles');
     } catch (err) {
-      console.error('Error:', err);
-      setError('An error occurred. Please try again later.');
+      console.error("Error:", err);
+      setError("An error occurred. Please try again later.");
     }
   };
-  
 
   const handleNext = () => setStep((prev) => Math.min(prev + 1, totalSteps));
   const goBack = () => setStep((prev) => Math.max(prev - 1, 1));
 
-
   const renderStep = () => {
-    switch(step) {
+    switch (step) {
       case 1:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">Name</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your name will be visible on your profile</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your name will be visible on your profile
+            </p>
             <input
               type="text"
               name="preferredName"
@@ -167,7 +165,9 @@ export default function CreateProfile() {
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">Age</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your age will be visible on your profile</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your age will be visible on your profile
+            </p>
             <input
               type="number"
               name="age"
@@ -183,8 +183,12 @@ export default function CreateProfile() {
       case 3:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you identify?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your gender will be visible on your profile</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              How do you identify?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your gender will be visible on your profile
+            </p>
             <select
               name="gender"
               value={formData.gender}
@@ -203,8 +207,12 @@ export default function CreateProfile() {
       case 4:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Where are you based?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your relative location will be shown on your profile</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Where are you based?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your relative location will be shown on your profile
+            </p>
             <input
               type="text"
               name="city"
@@ -218,8 +226,12 @@ export default function CreateProfile() {
       case 5:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Tell us about yourself</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Share a brief bio with the community</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Tell us about yourself
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Share a brief bio with the community
+            </p>
             <textarea
               name="bio"
               value={formData.bio}
@@ -233,8 +245,12 @@ export default function CreateProfile() {
       case 6:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What do you do?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your occupation will be visible on your profile</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              What do you do?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your occupation will be visible on your profile
+            </p>
             <input
               type="text"
               name="occupation"
@@ -248,8 +264,12 @@ export default function CreateProfile() {
       case 7:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you like to debate?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose your preferred style</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              How do you like to debate?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Choose your preferred style
+            </p>
             <select
               name="debateStyle"
               value={formData.debateStyle}
@@ -266,8 +286,12 @@ export default function CreateProfile() {
       case 8:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How would you like to communicate?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose your preferred method</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              How would you like to communicate?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Choose your preferred method
+            </p>
             <select
               name="communicationPreference"
               value={formData.communicationPreference}
@@ -281,41 +305,28 @@ export default function CreateProfile() {
             </select>
           </div>
         );
-        case 9: // New photo upload step
-          return (
-            <div className="space-y-4 animate-fadeIn text-center">
-              <h2 className="text-4xl font-['Poppins'] font-light mb-2">Upload A Photo</h2>
-              <p className="text-[#FF8D58]/70 mb-6 font-light">This will be your profile picture</p>
-
-              {/* Custom File Input */}
-              <div className="relative">
-                <input
-                  type="file"
-                  id="photo"
-                  name="photo"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                  required
-                />
-                <label
-                  htmlFor="photo"
-                  className="inline-block bg-[#FF8D58] text-white text-lg font-light py-2 px-6 rounded-full cursor-pointer transition-all hover:bg-[#e87749] focus:outline-none"
-                >
-                  Choose File
-                </label>
-              </div>
-
-              {/* Preview */}
-              {photoPreview && (
-                <img
-                  src={photoPreview || "/placeholder.svg"}
-                  alt="Photo preview"
-                  className="w-32 h-32 object-cover rounded-full mx-auto mt-4"
-                />
-              )}
-            </div>
-          );
+      case 9:
+      case 10:
+      case 11:
+        const questionIndex = step - 9;
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              {formData.questions[questionIndex]}
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Share how you would resolve this conflict
+            </p>
+            <textarea
+              name={`answer${questionIndex + 1}`}
+              value={formData.answers[questionIndex]}
+              onChange={handleChange}
+              placeholder="Your solution"
+              rows={4}
+              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
+            />
+          </div>
+        );
       default:
         return null;
     }
@@ -338,7 +349,7 @@ export default function CreateProfile() {
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                i + 1 === step ? 'bg-[#FF8D58]' : 'bg-[#FF8D58]/20'
+                i + 1 === step ? "bg-[#FF8D58]" : "bg-[#FF8D58]/20"
               }`}
             />
           ))}
@@ -350,21 +361,19 @@ export default function CreateProfile() {
           </div>
         )}
 
-        {/* Navigation Buttons */}
         <div className="flex flex-col w-full max-w-md mt-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             {renderStep()}
-            
-            {/* Buttons container */}
+
             <div className="flex justify-between mt-8">
               <button
-                type="button" // Add this to prevent form submission
+                type="button"
                 onClick={(e) => {
-                  e.preventDefault(); // Prevent form submission
+                  e.preventDefault();
                   goBack();
                 }}
                 className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
-                style={{ visibility: step === 1 ? 'hidden' : 'visible' }}
+                style={{ visibility: step === 1 ? "hidden" : "visible" }}
               >
                 ← Back
               </button>
@@ -372,13 +381,11 @@ export default function CreateProfile() {
                 type="submit"
                 className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
               >
-                {step === totalSteps ? 'Complete Profile →' : 'Enter →'}
+                {step === totalSteps ? "Complete Profile →" : "Enter →"}
               </button>
             </div>
           </form>
         </div>
-
-
       </main>
     </div>
   );
