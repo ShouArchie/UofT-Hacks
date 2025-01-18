@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Header from '@/components/Header';
 
 const ArgueMateAuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -36,19 +37,7 @@ const ArgueMateAuthPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FF8D58] font-['Poppins',sans-serif] text-[#FFEBD0]">
-      {/* Header */}
-      <header className="flex justify-between items-center p-6">
-        <h1 className="text-3xl font-light">ArgueMate</h1>
-        <nav className="space-x-8">
-          <a href="#" className="hover:opacity-80">About</a>
-          <button 
-            onClick={() => setIsLogin(false)}
-            className="bg-[#FFEBD0] text-[#FF8D58] px-6 py-2 rounded-full hover:opacity-90 transition-colors"
-          >
-            Sign Up
-          </button>
-        </nav>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="flex flex-col items-center justify-center px-4 pt-20">
