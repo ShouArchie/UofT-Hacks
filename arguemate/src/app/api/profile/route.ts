@@ -1,7 +1,56 @@
-import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
+
+// Define sample photos (add these to your public folder)
+const samplePhotos = [
+  '/profile-photos/1.jpg',
+  '/profile-photos/2.jpg',
+  '/profile-photos/3.jpg',
+  '/profile-photos/4.jpg',
+  '/profile-photos/5.jpg'
+];
+
+// Helper function to get random photo
+const getRandomPhoto = () => {
+  const randomIndex = Math.floor(Math.random() * samplePhotos.length);
+  return samplePhotos[randomIndex];
+};
+
+export async function GET() {
+  try {
+    const profiles = await prisma.profile.findMany({
+      select: {
+        id: true,
+        bio: true,
+        image: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      },
+    });
+
+    // Map through profiles and add photos where missing
+    const profilesWithPhotos = profiles.map(profile => ({
+      ...profile,
+      image: profile.image || getRandomPhoto()
+    }));
+
+    return NextResponse.json(profilesWithPhotos);
+  } catch (error) {
+    console.error('Error fetching profiles:', error);
+    return NextResponse.json({ message: 'Error fetching profiles', error: error.message }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
 
 export async function POST(req: Request) {
   console.log('Received POST request to /api/profile');
@@ -31,6 +80,20 @@ export async function POST(req: Request) {
 
     console.log('Attempting to create profile for user:', userId);
     console.log('Profile data:', data);
+
+    // Validate required fields
+    const requiredFields = ['bio'];
+    for (const field of requiredFields) {
+      if (!data[field]) {
+        console.error(`Missing required field: ${field}`);
+        return NextResponse.json({ message: `${field} is required` }, { status: 400 });
+      }
+    }
+
+    // Validate field lengths
+    if (data.bio && data.bio.length > 500) {
+      return NextResponse.json({ message: 'Bio must be less than 500 characters' }, { status: 400 });
+    }
 
     try {
       const profile = await prisma.profile.create({
