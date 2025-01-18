@@ -103,8 +103,8 @@ export default function CreateProfile() {
       case 1:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What should we call you?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose a name you'd like others to use</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Name</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Your name will be visible on your profile</p>
             <input
               type="text"
               name="preferredName"
@@ -118,14 +118,14 @@ export default function CreateProfile() {
       case 2:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What's your age?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">This helps us find suitable debate partners</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Age</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Your age will be visible on your profile</p>
             <input
               type="number"
               name="age"
               value={formData.age}
               onChange={handleChange}
-              min="13"
+              min="18"
               max="120"
               placeholder="Your age"
               className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 pb-2"
@@ -136,12 +136,12 @@ export default function CreateProfile() {
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you identify?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Tell us about yourself</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Your gender will be visible on your profile</p>
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
+              className="w-full text-2xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
             >
               <option value="">Select gender</option>
               <option value="male">Male</option>
@@ -156,7 +156,7 @@ export default function CreateProfile() {
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">Where are you based?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">We'll connect you with nearby debaters</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Your relative location will be shown on your profile</p>
             <input
               type="text"
               name="city"
@@ -186,7 +186,7 @@ export default function CreateProfile() {
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">What do you do?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your occupation helps people know you better</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Your occupation will be visible on your profile</p>
             <input
               type="text"
               name="occupation"
@@ -206,7 +206,7 @@ export default function CreateProfile() {
               name="debateStyle"
               value={formData.debateStyle}
               onChange={handleChange}
-              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
+              className="w-full text-2xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
             >
               <option value="">Select style</option>
               <option value="casual">Casual Discussion</option>
@@ -224,7 +224,7 @@ export default function CreateProfile() {
               name="communicationPreference"
               value={formData.communicationPreference}
               onChange={handleChange}
-              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
+              className="w-full text-2xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
             >
               <option value="">Select preference</option>
               <option value="text">Text Only</option>
@@ -265,38 +265,35 @@ export default function CreateProfile() {
           </div>
         )}
 
-        <div className="w-full max-w-md">
+        {/* Navigation Buttons */}
+        <div className="flex flex-col w-full max-w-md mt-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             {renderStep()}
             
-            <button
-              type="submit"
-              className="mt-8 w-full bg-[#FF8D58] text-white py-4 px-6 rounded-full text-lg font-['Poppins'] font-light transition-all duration-300 hover:opacity-90 hover:scale-[0.99] active:scale-95"
-            >
-              {step === totalSteps ? 'Complete Profile' : 'Enter'}
-            </button>
+            {/* Buttons container */}
+            <div className="flex justify-between mt-8">
+              <button
+                type="button" // Add this to prevent form submission
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent form submission
+                  goBack();
+                }}
+                className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
+                style={{ visibility: step === 1 ? 'hidden' : 'visible' }}
+              >
+                ← Back
+              </button>
+              <button
+                type="submit"
+                className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
+              >
+                {step === totalSteps ? 'Complete Profile →' : 'Enter →'}
+              </button>
+            </div>
           </form>
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between w-full max-w-md mt-8">
-          {step > 1 && (
-            <button
-              onClick={goBack}
-              className="text-[#FF8D58] font-light transition-all duration-300 hover:opacity-70"
-            >
-              ← Back
-            </button>
-          )}
-          {step < totalSteps && (
-            <button
-              onClick={handleNext}
-              className="text-[#FF8D58] font-light transition-all duration-300 hover:opacity-70 ml-auto"
-            >
-              Next →
-            </button>
-          )}
-        </div>
+
       </main>
     </div>
   );

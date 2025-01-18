@@ -22,3 +22,12 @@ body {
   background: var(--background);
   font-family: 'Poppins', Arial, Helvetica, sans-serif;
 }
+
+select:focus {
+  -webkit-tap-highlight-color: transparent;
+}
+
+select option {
+  background-color: white;
+  color: #FF8D58;
+}
