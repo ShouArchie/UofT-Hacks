@@ -44,10 +44,7 @@ export default function Home() {
           <Link href="/about" className="hover:opacity-80">
             About
           </Link>
-          <Link
-            href="src/app/(homelogin)/login/page.tsx"
-            className="hover:opacity-80"
-          >
+          <Link href="/signup" className="hover:opacity-80">
             Sign Up
           </Link>
         </div>
