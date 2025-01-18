@@ -78,7 +78,6 @@ export default function ProfilesPage() {
                 className="bg-foreground shadow-xl rounded-lg overflow-hidden"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2">
-                  {/* Left side - Photo with Name and Age */}
                   <div className="relative h-[300px] md:h-[600px]">
                     <Image
                       src={profile.image || "/placeholder.svg"}
@@ -93,9 +92,7 @@ export default function ProfilesPage() {
                     </div>
                   </div>
 
-                  {/* Right side - Profile Info */}
                   <div className="p-8 space-y-6">
-                    {/* Basic Info */}
                     <div className="space-y-2 text-background">
                       <p>
                         <span className="font-medium">Gender:</span>{" "}
@@ -111,7 +108,6 @@ export default function ProfilesPage() {
                       </p>
                     </div>
 
-                    {/* Debate Style */}
                     <div className="space-y-2">
                       <h3 className="text-xl font-semibold text-background">
                         Debate Style
@@ -119,7 +115,6 @@ export default function ProfilesPage() {
                       <p className="text-background">{profile.debateStyle}</p>
                     </div>
 
-                    {/* Communication Preference */}
                     <div className="space-y-2">
                       <h3 className="text-xl font-semibold text-background">
                         Communication Preference
@@ -129,7 +124,6 @@ export default function ProfilesPage() {
                       </p>
                     </div>
 
-                    {/* Bio */}
                     <div className="space-y-2">
                       <h3 className="text-xl font-semibold text-background">
                         Bio

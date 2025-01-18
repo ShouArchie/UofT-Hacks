@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 //import { createProfile } from '@/app/api/profile/createProfile'; // Updated import
 
 interface SessionUser {
@@ -16,7 +16,7 @@ export default function CreateProfile() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
     preferredName: string;
@@ -27,29 +27,38 @@ export default function CreateProfile() {
     occupation: string;
     debateStyle: string;
     communicationPreference: string;
+    answer1: string;
+    answer2: string;
+    answer3: string;
     photo: File | null; // Allow `File` or `null`
   }>({
-    preferredName: '',
-    age: '',
-    gender: '',
-    city: '',
-    bio: '',
-    occupation: '',
-    debateStyle: '',
-    communicationPreference: '',
+    preferredName: "",
+    age: "",
+    gender: "",
+    city: "",
+    bio: "",
+    occupation: "",
+    debateStyle: "",
+    communicationPreference: "",
     photo: null,
+    answer1: "",
+    answer2: "",
+    answer3: "",
   });
-  
 
-  const totalSteps = 9; // Increase step count to include photo upload step
+  const totalSteps = 12; // Update to match the total number of steps
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
   }, [status, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -75,38 +84,38 @@ export default function CreateProfile() {
 
     const user = session?.user as SessionUser | undefined;
     if (!user?.id) {
-      setError('User ID not found in session. Please try logging in again.');
+      setError("User ID not found in session. Please try logging in again.");
       return;
     }
 
     // Validate required fields
     if (!formData.preferredName || !formData.age || !formData.photo) {
-      setError('Please fill out all required fields and upload a photo.');
-      console.log('Form Data:', formData);
+      setError("Please fill out all required fields and upload a photo.");
+      console.log("Form Data:", formData);
       return;
     }
 
-    let photoPath = '';
+    let photoPath = "";
     if (formData.photo) {
       const photoData = new FormData();
-      photoData.append('photo', formData.photo);
-      photoData.append('userId', user.id);
+      photoData.append("photo", formData.photo);
+      photoData.append("userId", user.id);
 
       try {
-        const photoResponse = await fetch('/api/upload', {
-          method: 'POST',
+        const photoResponse = await fetch("/api/upload", {
+          method: "POST",
           body: photoData,
         });
 
         if (!photoResponse.ok) {
-          throw new Error('Photo upload failed.');
+          throw new Error("Photo upload failed.");
         }
 
         const photoResult = await photoResponse.json();
         photoPath = photoResult.photoPath;
       } catch (err) {
-        console.error('Photo upload error:', err);
-        setError('Failed to upload photo. Please try again.');
+        console.error("Photo upload error:", err);
+        setError("Failed to upload photo. Please try again.");
         return;
       }
     }
@@ -119,40 +128,41 @@ export default function CreateProfile() {
     };
 
     try {
-      const response = await fetch('/api/profile/createProfile', { // Updated fetch call
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/profile/createProfile", {
+        // Updated fetch call
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', errorText);
-        setError('Failed to save profile. Please try again.');
+        console.error("API Error:", errorText);
+        setError("Failed to save profile. Please try again.");
         return;
       }
 
       const result = await response.json();
-      console.log('Profile created successfully:', result);
-      router.push('/profiles');
+      console.log("Profile created successfully:", result);
+      router.push("/profiles");
     } catch (err) {
-      console.error('Error:', err);
-      setError('An error occurred. Please try again later.');
+      console.error("Error:", err);
+      setError("An error occurred. Please try again later.");
     }
   };
-  
 
   const handleNext = () => setStep((prev) => Math.min(prev + 1, totalSteps));
   const goBack = () => setStep((prev) => Math.max(prev - 1, 1));
 
-
   const renderStep = () => {
-    switch(step) {
+    switch (step) {
       case 1:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">Name</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your name will be visible on your profile</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your name will be visible on your profile
+            </p>
             <input
               type="text"
               name="preferredName"
@@ -167,7 +177,9 @@ export default function CreateProfile() {
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">Age</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your age will be visible on your profile</p>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your age will be visible on your profile
+            </p>
             <input
               type="number"
               name="age"
@@ -183,8 +195,12 @@ export default function CreateProfile() {
       case 3:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you identify?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your gender will be visible on your profile</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              How do you identify?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your gender will be visible on your profile
+            </p>
             <select
               name="gender"
               value={formData.gender}
@@ -203,8 +219,12 @@ export default function CreateProfile() {
       case 4:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Where are you based?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your relative location will be shown on your profile</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Where are you based?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your relative location will be shown on your profile
+            </p>
             <input
               type="text"
               name="city"
@@ -218,8 +238,12 @@ export default function CreateProfile() {
       case 5:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Tell us about yourself</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Share a brief bio with the community</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Tell us about yourself
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Share a brief bio with the community
+            </p>
             <textarea
               name="bio"
               value={formData.bio}
@@ -233,8 +257,12 @@ export default function CreateProfile() {
       case 6:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What do you do?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Your occupation will be visible on your profile</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              What do you do?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Your occupation will be visible on your profile
+            </p>
             <input
               type="text"
               name="occupation"
@@ -248,8 +276,12 @@ export default function CreateProfile() {
       case 7:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you like to debate?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose your preferred style</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              How do you like to debate?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Choose your preferred style
+            </p>
             <select
               name="debateStyle"
               value={formData.debateStyle}
@@ -266,8 +298,12 @@ export default function CreateProfile() {
       case 8:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How would you like to communicate?</h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose your preferred method</p>
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              How would you like to communicate?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Choose your preferred method
+            </p>
             <select
               name="communicationPreference"
               value={formData.communicationPreference}
@@ -281,41 +317,108 @@ export default function CreateProfile() {
             </select>
           </div>
         );
-        case 9: // New photo upload step
-          return (
-            <div className="space-y-4 animate-fadeIn text-center">
-              <h2 className="text-4xl font-['Poppins'] font-light mb-2">Upload A Photo</h2>
-              <p className="text-[#FF8D58]/70 mb-6 font-light">This will be your profile picture</p>
+      case 9:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Your partner dreams of being a goat farmer in the Alps, but you’re
+              all about city life with coffee shops and reliable Wi-Fi. What
+              steps would you take to find a middle ground?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Share how you would resolve this conflict
+            </p>
+            <textarea
+              name="answer1"
+              value={formData.answer1}
+              onChange={handleChange}
+              placeholder="Your solution"
+              rows={4}
+              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
+            />
+          </div>
+        );
+      case 10:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Your partner bought a life-sized inflatable dinosaur “because it
+              was a great deal.” How would you address their spending habits
+              without stomping on their dino-sized joy?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Share how you would resolve this conflict
+            </p>
+            <textarea
+              name="answer2"
+              value={formData.answer2}
+              onChange={handleChange}
+              placeholder="Your solution"
+              rows={4}
+              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
+            />
+          </div>
+        );
+      case 11:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              You suggest a comedy, and they pick a 4-hour documentary about
+              medieval farming. How do you settle on something without it
+              becoming the next great debate?
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              Share how you would resolve this conflict
+            </p>
+            <textarea
+              name="answer3"
+              value={formData.answer3}
+              onChange={handleChange}
+              placeholder="Your solution"
+              rows={4}
+              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
+            />
+          </div>
+        );
+      case 12: // New photo upload step
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
+              Upload A Photo
+            </h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">
+              This will be your profile picture
+            </p>
 
-              {/* Custom File Input */}
-              <div className="relative">
-                <input
-                  type="file"
-                  id="photo"
-                  name="photo"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                  required
-                />
-                <label
-                  htmlFor="photo"
-                  className="inline-block bg-[#FF8D58] text-white text-lg font-light py-2 px-6 rounded-full cursor-pointer transition-all hover:bg-[#e87749] focus:outline-none"
-                >
-                  Choose File
-                </label>
-              </div>
-
-              {/* Preview */}
-              {photoPreview && (
-                <img
-                  src={photoPreview || "/placeholder.svg"}
-                  alt="Photo preview"
-                  className="w-32 h-32 object-cover rounded-full mx-auto mt-4"
-                />
-              )}
+            {/* Custom File Input */}
+            <div className="relative">
+              <input
+                type="file"
+                id="photo"
+                name="photo"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+                required
+              />
+              <label
+                htmlFor="photo"
+                className="inline-block bg-[#FF8D58] text-white text-lg font-light py-2 px-6 rounded-full cursor-pointer transition-all hover:bg-[#e87749] focus:outline-none"
+              >
+                Choose File
+              </label>
             </div>
-          );
+
+            {/* Preview */}
+            {photoPreview && (
+              <img
+                src={photoPreview || "/placeholder.svg"}
+                alt="Photo preview"
+                className="w-32 h-32 object-cover rounded-full mx-auto mt-4"
+              />
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -338,7 +441,7 @@ export default function CreateProfile() {
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                i + 1 === step ? 'bg-[#FF8D58]' : 'bg-[#FF8D58]/20'
+                i + 1 === step ? "bg-[#FF8D58]" : "bg-[#FF8D58]/20"
               }`}
             />
           ))}
@@ -354,7 +457,7 @@ export default function CreateProfile() {
         <div className="flex flex-col w-full max-w-md mt-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             {renderStep()}
-            
+
             {/* Buttons container */}
             <div className="flex justify-between mt-8">
               <button
@@ -364,7 +467,7 @@ export default function CreateProfile() {
                   goBack();
                 }}
                 className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
-                style={{ visibility: step === 1 ? 'hidden' : 'visible' }}
+                style={{ visibility: step === 1 ? "hidden" : "visible" }}
               >
                 ← Back
               </button>
@@ -372,15 +475,12 @@ export default function CreateProfile() {
                 type="submit"
                 className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
               >
-                {step === totalSteps ? 'Complete Profile →' : 'Enter →'}
+                {step === totalSteps ? "Complete Profile →" : "Enter →"}
               </button>
             </div>
           </form>
         </div>
-
-
       </main>
     </div>
   );
 }
-
