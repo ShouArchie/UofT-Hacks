@@ -1,52 +1,39 @@
 import multer from 'multer';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 const storage = multer.diskStorage({
-  destination: './public/uploads', // Directory to save photos
+  destination: './public/uploads', // Ensure this folder exists
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // Generate unique filename
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });
 
 const upload = multer({ storage });
 
 export const config = {
-  api: {
-    bodyParser: false, // Disable bodyParser for file uploads
-  },
+  api: { bodyParser: false }, // Disable Next.js body parser for file uploads
 };
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   if (req.method === 'POST') {
-    const userId = req.query.userId; // Get userId from query or session
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
     const multerUpload = upload.single('photo');
-    multerUpload(req, {}, async (err) => {
+
+    // Use `multerUpload` to handle the file upload
+    multerUpload(req, {}, (err) => {
       if (err) {
-        return res.status(500).json({ message: 'File upload failed', error: err });
+        console.error('Upload error:', err);
+        return res.status(500).json({ error: 'Upload failed' });
       }
 
+      // Debug uploaded file
+      console.log('Uploaded file:', req.file);
+
+      // Return the file path to the client
       const photoPath = `/uploads/${req.file.filename}`;
-
-      try {
-        await prisma.profile.update({
-          where: { userId },
-          data: { image: photoPath },
-        });
-
-        res.status(200).json({ message: 'Photo uploaded successfully', photoPath });
-      } catch (error) {
-        res.status(500).json({ message: 'Database update failed', error });
-      }
+      res.status(200).json({ photoPath });
     });
   } else {
-    res.status(405).json({ message: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
   }
 }

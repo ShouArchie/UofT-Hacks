@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+//import { createProfile } from '@/app/api/profile/createProfile'; // Updated import
 
 interface SessionUser {
   name?: string | null;
@@ -16,7 +17,18 @@ export default function CreateProfile() {
   const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [formData, setFormData] = useState<{
+    preferredName: string;
+    age: string;
+    gender: string;
+    city: string;
+    bio: string;
+    occupation: string;
+    debateStyle: string;
+    communicationPreference: string;
+    photo: File | null; // Allow `File` or `null`
+  }>({
     preferredName: '',
     age: '',
     gender: '',
@@ -25,79 +37,114 @@ export default function CreateProfile() {
     occupation: '',
     debateStyle: '',
     communicationPreference: '',
-    photo: null, 
+    photo: null,
   });
+  
 
-  const totalSteps = 8;
+  const totalSteps = 9; // Increase step count to include photo upload step
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setFormData((prevState) => ({ ...prevState, photo: file }));
+      setPhotoPreview(URL.createObjectURL(file)); // Show photo preview
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (step !== totalSteps) {
       handleNext();
       return;
     }
-    
+
     const user = session?.user as SessionUser | undefined;
     if (!user?.id) {
       setError('User ID not found in session. Please try logging in again.');
       return;
     }
 
+    // Validate required fields
+    if (!formData.preferredName || !formData.age || !formData.photo) {
+      setError('Please fill out all required fields and upload a photo.');
+      console.log('Form Data:', formData);
+      return;
+    }
+
+    let photoPath = '';
+    if (formData.photo) {
+      const photoData = new FormData();
+      photoData.append('photo', formData.photo);
+      photoData.append('userId', user.id);
+
+      try {
+        const photoResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: photoData,
+        });
+
+        if (!photoResponse.ok) {
+          throw new Error('Photo upload failed.');
+        }
+
+        const photoResult = await photoResponse.json();
+        photoPath = photoResult.photoPath;
+      } catch (err) {
+        console.error('Photo upload error:', err);
+        setError('Failed to upload photo. Please try again.');
+        return;
+      }
+    }
+
+    const profileData = {
+      ...formData,
+      photo: photoPath, // Use the uploaded photo path
+      age: parseInt(formData.age, 10),
+      userId: user.id,
+    };
+
     try {
-      const profileData = {
-        ...formData,
-        age: parseInt(formData.age, 10),
-        userId: user.id,
-      };
-      
-      const response = await fetch('/api/profile', {
+      const response = await fetch('/api/profile/createProfile', { // Updated fetch call
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileData),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        let errorMessage;
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.message || 'Failed to save profile';
-        } catch (parseError) {
-          errorMessage = 'An unexpected error occurred';
-        }
-        throw new Error(errorMessage);
+        console.error('API Error:', errorText);
+        setError('Failed to save profile. Please try again.');
+        return;
       }
 
-      await response.json();
+      const result = await response.json();
+      console.log('Profile created successfully:', result);
       router.push('/profiles');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred while creating your profile. Please try again.');
+    } catch (err) {
+      console.error('Error:', err);
+      setError('An error occurred. Please try again later.');
     }
   };
+  
 
-  const goBack = () => {
-    setStep(prev => Math.max(prev - 1, 1));
-  };
+  const handleNext = () => setStep((prev) => Math.min(prev + 1, totalSteps));
+  const goBack = () => setStep((prev) => Math.max(prev - 1, 1));
 
-  const handleNext = () => {
-    setStep(prev => Math.min(prev + 1, totalSteps));
-  };
 
   const renderStep = () => {
     switch(step) {
@@ -234,23 +281,43 @@ export default function CreateProfile() {
             </select>
           </div>
         );
-        case 9: // Add a new step for photo upload
+        case 9: // New photo upload step
           return (
             <div className="space-y-4 animate-fadeIn text-center">
-              <h2 className="text-4xl font-['Poppins'] font-light mb-2">Upload Your Photo</h2>
+              <h2 className="text-4xl font-['Poppins'] font-light mb-2">Upload A Photo</h2>
               <p className="text-[#FF8D58]/70 mb-6 font-light">This will be your profile picture</p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setFormData((prevState) => ({ ...prevState, photo: file }));
-                }}
-                className="w-full text-xl font-light text-[#FF8D58] focus:outline-none"
-              />
-            </div>
-  );
 
+              {/* Custom File Input */}
+              <div className="relative">
+                <input
+                  type="file"
+                  id="photo"
+                  name="photo"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                  required
+                />
+                <label
+                  htmlFor="photo"
+                  className="inline-block bg-[#FF8D58] text-white text-lg font-light py-2 px-6 rounded-full cursor-pointer transition-all hover:bg-[#e87749] focus:outline-none"
+                >
+                  Choose File
+                </label>
+              </div>
+
+              {/* Preview */}
+              {photoPreview && (
+                <img
+                  src={photoPreview || "/placeholder.svg"}
+                  alt="Photo preview"
+                  className="w-32 h-32 object-cover rounded-full mx-auto mt-4"
+                />
+              )}
+            </div>
+          );
+      default:
+        return null;
     }
   };
 
@@ -316,3 +383,4 @@ export default function CreateProfile() {
     </div>
   );
 }
+
