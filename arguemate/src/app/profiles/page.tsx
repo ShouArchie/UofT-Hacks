@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface Profile {
   id: string;
@@ -25,9 +25,9 @@ export default function ProfilesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated') {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    } else if (status === "authenticated") {
       fetchProfiles();
     }
   }, [status, router]);
@@ -35,60 +35,114 @@ export default function ProfilesPage() {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/profiles');
+      const response = await fetch("/api/profiles");
       if (response.ok) {
         const data = await response.json();
         setProfiles(data);
       } else {
-        console.error('Failed to fetch profiles');
+        console.error("Failed to fetch profiles");
       }
     } catch (error) {
-      console.error('Error fetching profiles:', error);
+      console.error("Error fetching profiles:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (status === 'loading' || loading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+  if (status === "loading" || loading) {
+    return (
+      <div className="min-h-screen bg-background p-4 text-foreground">
+        Loading...
+      </div>
+    );
   }
 
-  if (status === 'unauthenticated') {
-    return null; // This will prevent the "Please sign in" message from flashing before redirect
+  if (status === "unauthenticated") {
+    return null;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Profiles</h1>
-      {profiles.length === 0 ? (
-        <p>No profiles found.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {profiles.map((profile) => (
-            <div key={profile.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative h-48">
-                <Image
-                  src={profile.image || '/placeholder.svg'}
-                  alt={`${profile.preferredName}'s profile`}
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </div>
-              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-2">{profile.preferredName}</h2>
-                <p className="text-gray-600 mb-2">{profile.age} years old, {profile.gender}</p>
-                <p className="text-gray-600 mb-2">{profile.city}</p>
-                <p className="text-gray-700 mb-4">{profile.bio}</p>
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Occupation: {profile.occupation}</span>
-                  <span>Debate Style: {profile.debateStyle}</span>
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-6xl mx-auto">
+        <nav className="flex justify-between items-center text-foreground py-4 mb-8">
+          <h1 className="text-2xl font-light">ArgueMate</h1>
+        </nav>
+
+        {profiles.length === 0 ? (
+          <p className="text-foreground text-center">No profiles found.</p>
+        ) : (
+          <div className="space-y-8">
+            {profiles.map((profile) => (
+              <div
+                key={profile.id}
+                className="bg-foreground shadow-xl rounded-lg overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2">
+                  {/* Left side - Photo with Name and Age */}
+                  <div className="relative h-[300px] md:h-[600px]">
+                    <Image
+                      src={profile.image || "/placeholder.svg"}
+                      alt={`${profile.preferredName}'s profile`}
+                      layout="fill"
+                      objectFit="cover"
+                    />
+                    <div className="absolute bottom-4 left-4">
+                      <h2 className="text-3xl font-semibold text-background">
+                        {profile.preferredName}, {profile.age}
+                      </h2>
+                    </div>
+                  </div>
+
+                  {/* Right side - Profile Info */}
+                  <div className="p-8 space-y-6">
+                    {/* Basic Info */}
+                    <div className="space-y-2 text-background">
+                      <p>
+                        <span className="font-medium">Gender:</span>{" "}
+                        {profile.gender}
+                      </p>
+                      <p>
+                        <span className="font-medium">Location:</span>{" "}
+                        {profile.city}
+                      </p>
+                      <p>
+                        <span className="font-medium">Occupation:</span>{" "}
+                        {profile.occupation}
+                      </p>
+                    </div>
+
+                    {/* Debate Style */}
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-semibold text-background">
+                        Debate Style
+                      </h3>
+                      <p className="text-background">{profile.debateStyle}</p>
+                    </div>
+
+                    {/* Communication Preference */}
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-semibold text-background">
+                        Communication Preference
+                      </h3>
+                      <p className="text-background">
+                        {profile.communicationPreference}
+                      </p>
+                    </div>
+
+                    {/* Bio */}
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-semibold text-background">
+                        Bio
+                      </h3>
+                      <p className="text-background">{profile.bio}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
