@@ -31,11 +31,11 @@ const Sidebar = () => {
             {isOpen && 'Home'}
           </span>
         </Link>
-        <Link href="/profile" className={`flex items-center space-x-4 ${pathname === '/profile' ? 'text-[#FFEBD0]' : ''}`}>
+        <Link href="/profile" className={`flex items-center space-x-4 ${pathname === '/profiles' ? 'text-[#FFEBD0]' : ''}`}>
           <User size={24} />
           <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
             {isOpen && 'Profile'}
-          </span>
+          </span>   
         </Link>
         <Link href="/chat" className={`flex items-center space-x-4 ${pathname === '/chat' ? 'text-[#FFEBD0]' : ''}`}>
           <MessageCircle size={24} />
