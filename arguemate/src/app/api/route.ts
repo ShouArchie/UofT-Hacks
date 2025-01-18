@@ -22,10 +22,37 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Handle unsupported HTTP methods if needed
-export function POST() {
-  return NextResponse.json(
-    { message: "Method Not Allowed" },
-    { status: 405 }
-  );
+export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json();
+    
+    // Assuming you have a user ID from the session
+    // You'll need to implement authentication and get the actual user ID
+    const userId = '...'; 
+
+    const profile = await prisma.profile.create({
+      data: {
+        preferredName: data.preferredName,
+        age: parseInt(data.age),
+        gender: data.gender,
+        city: data.city,
+        bio: data.bio,
+        userId: userId, // Link to user
+      },
+    });
+
+    return NextResponse.json({
+      message: "Profile created successfully",
+      profile,
+    });
+  } catch (error: any) {
+    console.error("Error creating profile:", error);
+    return NextResponse.json(
+      {
+        message: "Failed to create profile",
+        error: error.message,
+      },
+      { status: 500 }
+    );
+  }
 }

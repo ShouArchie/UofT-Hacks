@@ -15,7 +15,7 @@ datasource db {
 
 
 model User {
-  id String @default(uuid()) @db.Char(36)
+  id String @id @default(uuid()) @db.Char(36)
 
   name String @db.VarChar(255)
   email String @unique @db.VarChar(255)
@@ -24,5 +24,18 @@ model User {
 
   createdAt DateTime @default(now()) 
   updatedAt DateTime @default(now()) @updatedAt
-}
 
+  profile       Profile?
+}
+model Profile {
+  id            String   @id @default(cuid())
+  preferredName String
+  age           Int
+  gender        String
+  city          String
+  bio           String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @unique
+}
