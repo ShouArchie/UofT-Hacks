@@ -3,7 +3,29 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-//import { createProfile } from '@/app/api/profile/createProfile'; // Updated import
+
+const conflictQuestions = [
+  "Your partner dreams of being a goat farmer in the Alps, but you're all about city life with coffee shops and reliable Wi-Fi. What steps would you take to find a middle ground?",
+  'Your partner bought a life-sized inflatable dinosaur "because it was a great deal." How would you address their spending habits without stomping on their dino-sized joy?',
+  'Your partner says "nothing\'s wrong" but sighs loudly every five minutes. What steps would you take to get to the root of their feelings?',
+  "Your partner gets upset whenever you mention your work buddy, Sam, who happens to be a 70-year-old model. How would you handle their jealousy constructively?",
+  'Your partner\'s mom keeps comparing you to her "perfect" basketball player. How would you establish healthy boundaries while keeping the peace?',
+  'Your partner critiques your cooking every time with phrases like, "It\'s… creative." How would you express your feelings about their comments and find a solution?',
+  "Your partner thinks gifting socks is romantic, but you value quality time. How would you bridge the gap between your different love languages?",
+  "You want a relaxing beach vacation, but your partner insists on hiking up a volcano. How do you avoid turning the trip into a disaster movie?",
+  "Your partner lets the dog sleep in the bed, and now you're clinging to the edge of the mattress for dear life. How do you reclaim your spot without sparking a custody battle?",
+  "You suggest a comedy, and they pick a 4-hour documentary about medieval farming. How do you settle on something without it becoming the next great debate?",
+  "Your partner hits snooze 47 times every morning, and you've started dreaming about hiding the alarm. How do you address this without escalating to a 6 a.m. shouting match?",
+  'They want to "experiment" in the kitchen, and now you\'re eating spaghetti tacos for the third time this week. How do you diplomatically encourage a return to recipes?',
+  "You love sleeping in a pitch-black room, and they insist on having the TV on all night. How do you negotiate a truce without losing sleep?",
+  "You're always cold, and they're always hot. How do you find a solution before the thermostat becomes a battleground?",
+  "Your partner insists on hoarding all the pillows, leaving you with a flat pancake. How do you reclaim your fair share of cushion real estate?",
+];
+
+function getRandomQuestions(questions: string[], count: number): string[] {
+  const shuffled = [...questions].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
 
 interface SessionUser {
   name?: string | null;
@@ -31,19 +53,23 @@ export default function CreateProfile() {
     answer2: string;
     answer3: string;
     photo: File | null; // Allow `File` or `null`
-  }>({
-    preferredName: "",
-    age: "",
-    gender: "",
-    city: "",
-    bio: "",
-    occupation: "",
-    debateStyle: "",
-    communicationPreference: "",
-    photo: null,
-    answer1: "",
-    answer2: "",
-    answer3: "",
+    questions: string[];
+    answers: string[];
+  }>(() => {
+    const selectedQuestions = getRandomQuestions(conflictQuestions, 3);
+    return {
+      preferredName: "",
+      age: "",
+      gender: "",
+      city: "",
+      bio: "",
+      occupation: "",
+      debateStyle: "",
+      communicationPreference: "",
+      photo: null,
+      questions: selectedQuestions,
+      answers: ["", "", ""],
+    };
   });
 
   const totalSteps = 12; // Update to match the total number of steps
@@ -60,10 +86,18 @@ export default function CreateProfile() {
     >
   ) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+    if (name.startsWith("answer")) {
+      const index = parseInt(name.slice(-1)) - 1;
+      setFormData((prevState) => ({
+        ...prevState,
+        answers: prevState.answers.map((ans, i) => (i === index ? value : ans)),
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    }
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +159,8 @@ export default function CreateProfile() {
       photo: photoPath, // Use the uploaded photo path
       age: parseInt(formData.age, 10),
       userId: user.id,
+      conflictQuestions: formData.questions,
+      conflictAnswers: formData.answers,
     };
 
     try {
@@ -318,61 +354,20 @@ export default function CreateProfile() {
           </div>
         );
       case 9:
-        return (
-          <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
-              Your partner dreams of being a goat farmer in the Alps, but you’re
-              all about city life with coffee shops and reliable Wi-Fi. What
-              steps would you take to find a middle ground?
-            </h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">
-              Share how you would resolve this conflict
-            </p>
-            <textarea
-              name="answer1"
-              value={formData.answer1}
-              onChange={handleChange}
-              placeholder="Your solution"
-              rows={4}
-              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
-            />
-          </div>
-        );
       case 10:
-        return (
-          <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
-              Your partner bought a life-sized inflatable dinosaur “because it
-              was a great deal.” How would you address their spending habits
-              without stomping on their dino-sized joy?
-            </h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">
-              Share how you would resolve this conflict
-            </p>
-            <textarea
-              name="answer2"
-              value={formData.answer2}
-              onChange={handleChange}
-              placeholder="Your solution"
-              rows={4}
-              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
-            />
-          </div>
-        );
       case 11:
+        const questionIndex = step - 9;
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">
-              You suggest a comedy, and they pick a 4-hour documentary about
-              medieval farming. How do you settle on something without it
-              becoming the next great debate?
+              {formData.questions[questionIndex]}
             </h2>
             <p className="text-[#FF8D58]/70 mb-6 font-light">
               Share how you would resolve this conflict
             </p>
             <textarea
-              name="answer3"
-              value={formData.answer3}
+              name={`answer${questionIndex + 1}`}
+              value={formData.answers[questionIndex]}
               onChange={handleChange}
               placeholder="Your solution"
               rows={4}
@@ -380,7 +375,7 @@ export default function CreateProfile() {
             />
           </div>
         );
-      case 12: // New photo upload step
+      case 12:
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">
@@ -390,7 +385,6 @@ export default function CreateProfile() {
               This will be your profile picture
             </p>
 
-            {/* Custom File Input */}
             <div className="relative">
               <input
                 type="file"
@@ -409,7 +403,6 @@ export default function CreateProfile() {
               </label>
             </div>
 
-            {/* Preview */}
             {photoPreview && (
               <img
                 src={photoPreview || "/placeholder.svg"}
@@ -453,12 +446,10 @@ export default function CreateProfile() {
           </div>
         )}
 
-        {/* Navigation Buttons */}
         <div className="flex flex-col w-full max-w-md mt-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             {renderStep()}
 
-            {/* Buttons container */}
             <div className="flex justify-between mt-8">
               <button
                 type="button" // Add this to prevent form submission
