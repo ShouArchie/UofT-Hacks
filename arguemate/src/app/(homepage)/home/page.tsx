@@ -1,21 +1,22 @@
 "use client";
 import React from "react";
+import Header from '@/components/Header';
 
-type ButtonOrAnchorProps =
-  | (React.ButtonHTMLAttributes<HTMLButtonElement> & { href?: never })
-  | (React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string });
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  href?: string;
+};
 
-const Button: React.FC<ButtonOrAnchorProps> = ({
+const Button: React.FC<ButtonProps> = ({
   children,
   className = "",
   href,
   ...props
 }) => {
-  const baseClassName = `inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 ${className}`;
+  const baseClassName = `inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 ${className}`;
 
   if (href) {
     return (
-      <a href={href} className={baseClassName} {...props}>
+      <a href={href} className={baseClassName}>
         {children}
       </a>
     );
@@ -28,28 +29,10 @@ const Button: React.FC<ButtonOrAnchorProps> = ({
   );
 };
 
-const Link: React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({
-  children,
-  ...props
-}) => <a {...props}>{children}</a>;
-
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-[#FF8D58] text-[#FFEBD0] font-['Poppins',sans-serif]">
-      {/* Navigation */}
-      <nav className="flex justify-between items-center p-6">
-        <Link href="/" className="text-2xl font-light">
-          ArgueMate
-        </Link>
-        <div className="flex gap-8 items-center">
-          <Link href="/about" className="hover:opacity-80">
-            About
-          </Link>
-          <Link href="/signup" className="hover:opacity-80">
-            Sign Up
-          </Link>
-        </div>
-      </nav>
+      <Header />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 -mt-20">
@@ -69,3 +52,4 @@ export default function Home() {
     </div>
   );
 }
+
