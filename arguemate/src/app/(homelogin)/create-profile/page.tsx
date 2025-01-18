@@ -15,6 +15,7 @@ export default function CreateProfile() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     preferredName: '',
     age: '',
@@ -25,7 +26,8 @@ export default function CreateProfile() {
     debateStyle: '',
     communicationPreference: '',
   });
-  const [error, setError] = useState('');
+
+  const totalSteps = 8;
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -41,13 +43,10 @@ export default function CreateProfile() {
     }));
   };
 
-  const nextStep = () => setStep(prev => prev + 1);
-  const prevStep = () => setStep(prev => prev - 1);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step !== 3) {
-      nextStep();
+    if (step !== totalSteps) {
+      handleNext();
       return;
     }
     
@@ -63,7 +62,7 @@ export default function CreateProfile() {
         age: parseInt(formData.age, 10),
         userId: user.id,
       };
-      console.log('Sending profile data:', profileData);
+      
       const response = await fetch('/api/profile', {
         method: 'POST',
         headers: {
@@ -74,235 +73,231 @@ export default function CreateProfile() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Server response:', response.status, errorText);
         let errorMessage;
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.message || 'Failed to save profile';
         } catch (parseError) {
-          console.error('Error parsing error response:', parseError);
           errorMessage = 'An unexpected error occurred';
         }
         throw new Error(errorMessage);
       }
 
-      const result = await response.json();
-      console.log('Profile created successfully:', result);
+      await response.json();
       router.push('/profiles');
     } catch (error) {
-      console.error('Error creating profile:', error);
       setError(error instanceof Error ? error.message : 'An error occurred while creating your profile. Please try again.');
     }
   };
 
-  const inputClassName = "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 placeholder-gray-500";
+  const goBack = () => {
+    setStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleNext = () => {
+    setStep(prev => Math.min(prev + 1, totalSteps));
+  };
 
   const renderStep = () => {
-    switch (step) {
+    switch(step) {
       case 1:
         return (
-          <>
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">Basic Information</h3>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="preferredName" className="block text-sm font-medium text-gray-700">
-                  Preferred Name
-                </label>
-                <input
-                  type="text"
-                  id="preferredName"
-                  name="preferredName"
-                  value={formData.preferredName}
-                  onChange={handleChange}
-                  className={inputClassName}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="age" className="block text-sm font-medium text-gray-700">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  id="age"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleChange}
-                  className={inputClassName}
-                  required
-                  min="13"
-                  max="120"
-                />
-              </div>
-              <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
-                  Gender
-                </label>
-                <select
-                  id="gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className={inputClassName}
-                  required
-                >
-                  <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="non-binary">Non-binary</option>
-                  <option value="other">Other</option>
-                  <option value="prefer-not-to-say">Prefer not to say</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                  City
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className={inputClassName}
-                  required
-                />
-              </div>
-            </div>
-          </>
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What should we call you?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose a name you'd like others to use</p>
+            <input
+              type="text"
+              name="preferredName"
+              value={formData.preferredName}
+              onChange={handleChange}
+              placeholder="Your preferred name"
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 pb-2"
+            />
+          </div>
         );
       case 2:
         return (
-          <>
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">About You</h3>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-                  Bio
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  rows={4}
-                  className={inputClassName}
-                  placeholder="Tell us a bit about yourself..."
-                />
-              </div>
-              <div>
-                <label htmlFor="occupation" className="block text-sm font-medium text-gray-700">
-                  Occupation
-                </label>
-                <input
-                  type="text"
-                  id="occupation"
-                  name="occupation"
-                  value={formData.occupation}
-                  onChange={handleChange}
-                  className={inputClassName}
-                />
-              </div>
-            </div>
-          </>
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What's your age?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">This helps us find suitable debate partners</p>
+            <input
+              type="number"
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+              min="13"
+              max="120"
+              placeholder="Your age"
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 pb-2"
+            />
+          </div>
         );
       case 3:
         return (
-          <>
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">Debate Preferences</h3>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="debateStyle" className="block text-sm font-medium text-gray-700">
-                  Preferred Debate Style
-                </label>
-                <select
-                  id="debateStyle"
-                  name="debateStyle"
-                  value={formData.debateStyle}
-                  onChange={handleChange}
-                  className={inputClassName}
-                >
-                  <option value="">Select style</option>
-                  <option value="casual">Casual Discussion</option>
-                  <option value="formal">Formal Debate</option>
-                  <option value="competitive">Competitive</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="communicationPreference" className="block text-sm font-medium text-gray-700">
-                  Communication Preference
-                </label>
-                <select
-                  id="communicationPreference"
-                  name="communicationPreference"
-                  value={formData.communicationPreference}
-                  onChange={handleChange}
-                  className={inputClassName}
-                >
-                  <option value="">Select preference</option>
-                  <option value="text">Text Only</option>
-                  <option value="voice">Voice Chat</option>
-                  <option value="video">Video Chat</option>
-                </select>
-              </div>
-            </div>
-          </>
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you identify?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Tell us about yourself</p>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-binary</option>
+              <option value="other">Other</option>
+              <option value="prefer-not-to-say">Prefer not to say</option>
+            </select>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Where are you based?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">We'll connect you with nearby debaters</p>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="Your city"
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 pb-2"
+            />
+          </div>
+        );
+      case 5:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">Tell us about yourself</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Share a brief bio with the community</p>
+            <textarea
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              placeholder="Your bio"
+              rows={4}
+              className="w-full text-xl text-center font-['Poppins'] border-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 p-4 rounded-lg"
+            />
+          </div>
+        );
+      case 6:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">What do you do?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Your occupation helps people know you better</p>
+            <input
+              type="text"
+              name="occupation"
+              value={formData.occupation}
+              onChange={handleChange}
+              placeholder="Your occupation"
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] placeholder-[#FF8D58]/40 focus:outline-none transition-all duration-300 pb-2"
+            />
+          </div>
+        );
+      case 7:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How do you like to debate?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose your preferred style</p>
+            <select
+              name="debateStyle"
+              value={formData.debateStyle}
+              onChange={handleChange}
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
+            >
+              <option value="">Select style</option>
+              <option value="casual">Casual Discussion</option>
+              <option value="formal">Formal Debate</option>
+              <option value="competitive">Competitive</option>
+            </select>
+          </div>
+        );
+      case 8:
+        return (
+          <div className="space-y-4 animate-fadeIn text-center">
+            <h2 className="text-4xl font-['Poppins'] font-light mb-2">How would you like to communicate?</h2>
+            <p className="text-[#FF8D58]/70 mb-6 font-light">Choose your preferred method</p>
+            <select
+              name="communicationPreference"
+              value={formData.communicationPreference}
+              onChange={handleChange}
+              className="w-full text-3xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
+            >
+              <option value="">Select preference</option>
+              <option value="text">Text Only</option>
+              <option value="voice">Voice Chat</option>
+              <option value="video">Video Chat</option>
+            </select>
+          </div>
         );
     }
   };
 
   if (status === "loading") {
-    return <p>Loading...</p>;
+    return (
+      <div className="min-h-screen bg-white font-['Poppins'] text-[#FF8D58] flex items-center justify-center">
+        <p className="text-2xl">Loading...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Complete Your Profile</h2>
-      
-      {/* Progress indicator */}
-      <div className="mb-8">
-        <div className="flex justify-between">
-          {[1, 2, 3].map((num) => (
+    <div className="min-h-screen bg-white font-['Poppins'] text-[#FF8D58]">
+      <main className="flex flex-col items-center justify-center min-h-screen px-4">
+        {/* Progress Dots */}
+        <div className="flex gap-2 mb-12">
+          {Array.from({ length: totalSteps }, (_, i) => (
             <div
-              key={num}
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= num ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'
+              key={i}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                i + 1 === step ? 'bg-[#FF8D58]' : 'bg-[#FF8D58]/20'
               }`}
-            >
-              {num}
-            </div>
+            />
           ))}
         </div>
-      </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+        {error && (
+          <div className="mb-8 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center max-w-md">
+            {error}
+          </div>
+        )}
+
+        <div className="w-full max-w-md">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {renderStep()}
+            
+            <button
+              type="submit"
+              className="mt-8 w-full bg-[#FF8D58] text-white py-4 px-6 rounded-full text-lg font-['Poppins'] font-light transition-all duration-300 hover:opacity-90 hover:scale-[0.99] active:scale-95"
+            >
+              {step === totalSteps ? 'Complete Profile' : 'Enter'}
+            </button>
+          </form>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {renderStep()}
-
-        <div className="flex justify-between mt-8">
+        {/* Navigation Buttons */}
+        <div className="flex justify-between w-full max-w-md mt-8">
           {step > 1 && (
             <button
-              type="button"
-              onClick={prevStep}
-              className="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              onClick={goBack}
+              className="text-[#FF8D58] font-light transition-all duration-300 hover:opacity-70"
             >
-              Previous
+              ← Back
             </button>
           )}
-          <button
-            type="submit"
-            className="ml-auto bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
-          >
-            {step === 3 ? 'Complete Profile' : 'Next'}
-          </button>
+          {step < totalSteps && (
+            <button
+              onClick={handleNext}
+              className="text-[#FF8D58] font-light transition-all duration-300 hover:opacity-70 ml-auto"
+            >
+              Next →
+            </button>
+          )}
         </div>
-      </form>
+      </main>
     </div>
   );
 }
-
