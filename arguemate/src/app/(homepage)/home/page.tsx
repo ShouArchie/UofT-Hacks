@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Header from '@/components/Header';
+import Header from "@/components/Header";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   href?: string;
@@ -12,7 +12,7 @@ const Button: React.FC<ButtonProps> = ({
   href,
   ...props
 }) => {
-  const baseClassName = `inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 ${className}`;
+  const baseClassName = `inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 ${className}`;
 
   if (href) {
     return (
@@ -44,7 +44,7 @@ export default function Home() {
         </p>
         <Button
           href="/login"
-          className="mt-8 px-8 py-6 text-[#FF8D58] bg-[#FFEBD0] hover:bg-[#FFE0B5] text-lg rounded-full"
+          className="mt-8 px-8 py-6 text-[#FF8D58] bg-[#FFEBD0] hover:bg-[#FFE0B5] text-lg rounded-xl"
         >
           FIND LOVE
         </Button>
@@ -52,4 +52,3 @@ export default function Home() {
     </div>
   );
 }
-
