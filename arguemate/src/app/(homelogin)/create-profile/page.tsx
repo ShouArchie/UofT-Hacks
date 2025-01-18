@@ -25,6 +25,7 @@ export default function CreateProfile() {
     occupation: '',
     debateStyle: '',
     communicationPreference: '',
+    photo: null, 
   });
 
   const totalSteps = 8;
@@ -233,6 +234,23 @@ export default function CreateProfile() {
             </select>
           </div>
         );
+        case 9: // Add a new step for photo upload
+          return (
+            <div className="space-y-4 animate-fadeIn text-center">
+              <h2 className="text-4xl font-['Poppins'] font-light mb-2">Upload Your Photo</h2>
+              <p className="text-[#FF8D58]/70 mb-6 font-light">This will be your profile picture</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setFormData((prevState) => ({ ...prevState, photo: file }));
+                }}
+                className="w-full text-xl font-light text-[#FF8D58] focus:outline-none"
+              />
+            </div>
+  );
+
     }
   };
 
