@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { createProfile } from '@/app/api/profile/createProfile'
 
 const conflictQuestions = [
   "Your partner dreams of being a goat farmer in the Alps, but you're all about city life with coffee shops and reliable Wi-Fi. What steps would you take to find a middle ground?",
@@ -11,7 +12,7 @@ const conflictQuestions = [
   "Your partner gets upset whenever you mention your work buddy, Sam, who happens to be a 70-year-old model. How would you handle their jealousy constructively?",
   'Your partner\'s mom keeps comparing you to her "perfect" basketball player. How would you establish healthy boundaries while keeping the peace?',
   'Your partner critiques your cooking every time with phrases like, "It\'s… creative." How would you express your feelings about their comments and find a solution?',
-  "Your partner thinks gifting socks is romantic, but you value quality time. How would you bridge the gap between your different love languages?",
+  'Your partner thinks gifting socks is romantic, but you value quality time. How would you bridge the gap between your different love languages?',
   "You want a relaxing beach vacation, but your partner insists on hiking up a volcano. How do you avoid turning the trip into a disaster movie?",
   "Your partner lets the dog sleep in the bed, and now you're clinging to the edge of the mattress for dear life. How do you reclaim your spot without sparking a custody battle?",
   "You suggest a comedy, and they pick a 4-hour documentary about medieval farming. How do you settle on something without it becoming the next great debate?",
@@ -39,7 +40,6 @@ export default function CreateProfile() {
   const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
     preferredName: string;
     age: string;
@@ -49,10 +49,6 @@ export default function CreateProfile() {
     occupation: string;
     debateStyle: string;
     communicationPreference: string;
-    answer1: string;
-    answer2: string;
-    answer3: string;
-    photo: File | null; // Allow `File` or `null`
     questions: string[];
     answers: string[];
   }>(() => {
@@ -66,13 +62,12 @@ export default function CreateProfile() {
       occupation: "",
       debateStyle: "",
       communicationPreference: "",
-      photo: null,
       questions: selectedQuestions,
       answers: ["", "", ""],
     };
   });
 
-  const totalSteps = 12; // Update to match the total number of steps
+  const totalSteps = 11; // Updated total steps (removed photo upload step)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -100,14 +95,6 @@ export default function CreateProfile() {
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      setFormData((prevState) => ({ ...prevState, photo: file }));
-      setPhotoPreview(URL.createObjectURL(file)); // Show photo preview
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -123,64 +110,29 @@ export default function CreateProfile() {
     }
 
     // Validate required fields
-    if (!formData.preferredName || !formData.age || !formData.photo) {
-      setError("Please fill out all required fields and upload a photo.");
+    if (!formData.preferredName || !formData.age) {
+      setError("Please fill out all required fields.");
       console.log("Form Data:", formData);
       return;
     }
 
-    let photoPath = "";
-    if (formData.photo) {
-      const photoData = new FormData();
-      photoData.append("photo", formData.photo);
-      photoData.append("userId", user.id);
-
-      try {
-        const photoResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: photoData,
-        });
-
-        if (!photoResponse.ok) {
-          throw new Error("Photo upload failed.");
-        }
-
-        const photoResult = await photoResponse.json();
-        photoPath = photoResult.photoPath;
-      } catch (err) {
-        console.error("Photo upload error:", err);
-        setError("Failed to upload photo. Please try again.");
-        return;
-      }
-    }
-
     const profileData = {
-      ...formData,
-      photo: photoPath, // Use the uploaded photo path
-      age: parseInt(formData.age, 10),
       userId: user.id,
+      ...formData,
+      age: parseInt(formData.age, 10),
       conflictQuestions: formData.questions,
       conflictAnswers: formData.answers,
     };
 
     try {
-      const response = await fetch("/api/profile/createProfile", {
-        // Updated fetch call
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
-      });
+      const result = await createProfile(profileData);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error:", errorText);
+      if (result.success) {
+        console.log("Profile created successfully:", result.profile);
+        router.push("/home"); // Redirect to home page after profile creation
+      } else {
         setError("Failed to save profile. Please try again.");
-        return;
       }
-
-      const result = await response.json();
-      console.log("Profile created successfully:", result);
-      router.push("/profiles");
     } catch (err) {
       console.error("Error:", err);
       setError("An error occurred. Please try again later.");
@@ -375,43 +327,6 @@ export default function CreateProfile() {
             />
           </div>
         );
-      case 12:
-        return (
-          <div className="space-y-4 animate-fadeIn text-center">
-            <h2 className="text-4xl font-['Poppins'] font-light mb-2">
-              Upload A Photo
-            </h2>
-            <p className="text-[#FF8D58]/70 mb-6 font-light">
-              This will be your profile picture
-            </p>
-
-            <div className="relative">
-              <input
-                type="file"
-                id="photo"
-                name="photo"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="hidden"
-                required
-              />
-              <label
-                htmlFor="photo"
-                className="inline-block bg-[#FF8D58] text-white text-lg font-light py-2 px-6 rounded-full cursor-pointer transition-all hover:bg-[#e87749] focus:outline-none"
-              >
-                Choose File
-              </label>
-            </div>
-
-            {photoPreview && (
-              <img
-                src={photoPreview || "/placeholder.svg"}
-                alt="Photo preview"
-                className="w-32 h-32 object-cover rounded-full mx-auto mt-4"
-              />
-            )}
-          </div>
-        );
       default:
         return null;
     }
@@ -452,9 +367,9 @@ export default function CreateProfile() {
 
             <div className="flex justify-between mt-8">
               <button
-                type="button" // Add this to prevent form submission
+                type="button"
                 onClick={(e) => {
-                  e.preventDefault(); // Prevent form submission
+                  e.preventDefault();
                   goBack();
                 }}
                 className="text-[#FF8D58] text-lg font-light transition-all duration-300 hover:opacity-70"
@@ -475,3 +390,4 @@ export default function CreateProfile() {
     </div>
   );
 }
+
