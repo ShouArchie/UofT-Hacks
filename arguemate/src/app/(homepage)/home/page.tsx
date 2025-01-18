@@ -10,7 +10,12 @@ const HomePage: React.FC = () => {
             <a href="/about">About</a>
           </li>
           <li>
-            <a href="/login">Login</a>
+            <a
+              href="/login"
+              className="px-6 py-2 bg-[var(--foreground)] text-[var(--background)] font-semibold rounded-md hover:bg-[#FFD0A0] transition duration-300"
+            >
+              Login
+            </a>
           </li>
         </ul>
       </nav>
