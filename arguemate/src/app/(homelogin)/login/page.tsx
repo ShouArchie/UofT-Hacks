@@ -16,7 +16,7 @@ const ArgueMateAuthPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null) // Clear any previous errors
+    setError(null)
 
     if (isLogin) {
       if (!email || !password) {
@@ -29,10 +29,19 @@ const ArgueMateAuthPage: React.FC = () => {
           email,
           password,
         })
+        
         if (result?.error) {
           setError(result.error)
         } else {
-          router.push('/profile')
+          // Check if user has a profile
+          const profileCheck = await fetch('/api/user-profile/check')
+          const profileData = await profileCheck.json()
+          
+          if (profileData.profileCompleted) {
+            router.push('/home')
+          } else {
+            router.push('/create-profile')
+          }
         }
       } catch (error) {
         setError('An error occurred during login.')
