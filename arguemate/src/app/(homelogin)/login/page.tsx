@@ -19,10 +19,6 @@ const ArgueMateAuthPage: React.FC = () => {
     setError(null)
 
     if (isLogin) {
-      if (!email || !password) {
-        setError('Both email and password are required.')
-        return
-      }
       try {
         const result = await signIn('credentials', {
           redirect: false,
@@ -31,23 +27,19 @@ const ArgueMateAuthPage: React.FC = () => {
         })
         
         if (result?.error) {
-          setError(result.error)
-        } else {
-          // Check if user has a profile
-          const profileCheck = await fetch('/api/user-profile/check')
-          const profileData = await profileCheck.json()
-          
-          if (profileData.profileCompleted) {
-            router.push('/home')
-          } else {
-            router.push('/create-profile')
-          }
+          setError('Invalid email or password')
+          return
         }
+
+        // If login successful, redirect to home
+        router.push('/home')
+
       } catch (error) {
-        setError('An error occurred during login.')
         console.error('Login error:', error)
+        setError('An error occurred during login.')
       }
     } else {
+      // Signup flow
       if (!name || !email || !password || !confirmPassword) {
         setError('All fields are required.')
         return
@@ -62,20 +54,25 @@ const ArgueMateAuthPage: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, password }),
         })
-        if (response.ok) {
-          const result = await signIn('credentials', {
-            redirect: false,
-            email,
-            password,
-          })
-          if (result?.error) {
-            setError(result.error)
-          } else {
-            router.push('/create-profile')
-          }
-        } else {
+
+        if (!response.ok) {
           const data = await response.json()
           setError(data.message || 'An error occurred during signup.')
+          return
+        }
+
+        // After successful signup, automatically sign in
+        const result = await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        })
+
+        if (!result?.error) {
+          router.push('/create-profile')
+        } else {
+          console.error('Sign in error:', result.error)
+          setError('Account created but unable to sign in automatically.')
         }
       } catch (error) {
         setError('An error occurred during signup.')
@@ -98,6 +95,13 @@ const ArgueMateAuthPage: React.FC = () => {
           <h3 className="text-3xl font-light text-center mb-8">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h3>
+
+          {error && (
+            <div className="mb-6 p-3 bg-white/90 rounded-lg text-red-600 text-center">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <div className="space-y-2">
@@ -159,7 +163,6 @@ const ArgueMateAuthPage: React.FC = () => {
                 />
               </div>
             )}
-            {error && <p className="text-red-300 text-sm">{error}</p>}
             <button
               type="submit"
               className="w-full bg-[#FFEBD0] text-[#FF8D58] py-3 px-6 rounded-full text-lg font-medium hover:opacity-90 transition-colors duration-300"
