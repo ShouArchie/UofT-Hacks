@@ -3,20 +3,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Define sample photos
+// Define sample photos (add these to your public folder)
 const samplePhotos = [
   '/profile-photos/1.jpg',
   '/profile-photos/2.jpg',
   '/profile-photos/3.jpg',
   '/profile-photos/4.jpg',
-  '/profile-photos/5.jpg',
-  '/profile-photos/6.jpg',
-  '/profile-photos/7.jpg',
-  '/profile-photos/8.jpg',
-  '/profile-photos/9.jpg',
-  '/profile-photos/10.jpg',
-  '/profile-photos/11.jpg',
-  '/profile-photos/12.jpg'
+  '/profile-photos/5.jpg'
 ];
 
 // Helper function to get random photo
@@ -37,7 +30,6 @@ export async function GET() {
         bio: true,
         occupation: true,
         debateStyle: true,
-        communicationPreference: true,
         image: true,
       },
     });
@@ -50,10 +42,6 @@ export async function GET() {
 
     return NextResponse.json(profilesWithPhotos);
   } catch (error) {
-    console.error('Error fetching profiles:', error);
-    return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
+    // ... existing error handling ...
   }
 }
-

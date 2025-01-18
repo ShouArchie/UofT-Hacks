@@ -62,11 +62,13 @@ model Profile {
   gender                  String
   city                    String
   bio                     String?
-  interests               Json?
+  // interests               Json?
   occupation              String?
-  debateTopics            Json?
+  // debateTopics            Json?
   debateStyle             String?
   communicationPreference String?
-  image                   String?
+  conflictQuestions       String? // Added field
+  conflictAnswers         String? // Added field
   user                    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
