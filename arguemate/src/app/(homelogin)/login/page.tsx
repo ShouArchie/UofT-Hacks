@@ -1,9 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import Header from '@/components/Header';
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import Header from '@/components/Header'
 
 const ArgueMateAuthPage: React.FC = () => {
+  const router = useRouter()
   const [isLogin, setIsLogin] = useState(true)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -11,15 +14,30 @@ const ArgueMateAuthPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+    setError(null) // Clear any previous errors
+
     if (isLogin) {
       if (!email || !password) {
         setError('Both email and password are required.')
         return
       }
-      console.log('Login:', email, password)
-      alert('Login successful!')
+      try {
+        const result = await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        })
+        if (result?.error) {
+          setError(result.error)
+        } else {
+          router.push('/profile')
+        }
+      } catch (error) {
+        setError('An error occurred during login.')
+        console.error('Login error:', error)
+      }
     } else {
       if (!name || !email || !password || !confirmPassword) {
         setError('All fields are required.')
@@ -29,25 +47,44 @@ const ArgueMateAuthPage: React.FC = () => {
         setError('Passwords do not match.')
         return
       }
-      console.log('Signup:', name, email, password)
-      alert('Signup successful!')
+      try {
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        })
+        if (response.ok) {
+          const result = await signIn('credentials', {
+            redirect: false,
+            email,
+            password,
+          })
+          if (result?.error) {
+            setError(result.error)
+          } else {
+            router.push('/create-profile')
+          }
+        } else {
+          const data = await response.json()
+          setError(data.message || 'An error occurred during signup.')
+        }
+      } catch (error) {
+        setError('An error occurred during signup.')
+        console.error('Signup error:', error)
+      }
     }
-    setError(null)
   }
 
   return (
     <div className="min-h-screen bg-[#FF8D58] font-['Poppins',sans-serif] text-[#FFEBD0]">
       <Header />
 
-      {/* Main Content */}
       <main className="flex flex-col items-center justify-center px-4 pt-20">
-        {/* Logo and Tagline */}
         <div className="text-center mb-12">
           <h2 className="text-6xl font-light mb-4">ArgueMate</h2>
           <p className="text-2xl italic">A new perspective on dating</p>
         </div>
 
-        {/* Auth Form */}
         <div className="w-full max-w-md bg-[#FFEBD0]/10 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
           <h3 className="text-3xl font-light text-center mb-8">
             {isLogin ? 'Welcome Back' : 'Create Account'}

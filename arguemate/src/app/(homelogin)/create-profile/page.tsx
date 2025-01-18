@@ -1,28 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+
+interface SessionUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  id?: string;
+}
 
 export default function CreateProfile() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Basic Info
     preferredName: '',
     age: '',
     gender: '',
     city: '',
-    
-    // About You
     bio: '',
-    interests: [],
     occupation: '',
-    
-    // Preferences
-    debateTopics: [],
     debateStyle: '',
     communicationPreference: '',
   });
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push('/login');
+    }
+  }, [status, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -32,13 +41,8 @@ export default function CreateProfile() {
     }));
   };
 
-  const nextStep = () => {
-    setStep(prev => prev + 1);
-  };
-
-  const prevStep = () => {
-    setStep(prev => prev - 1);
-  };
+  const nextStep = () => setStep(prev => prev + 1);
+  const prevStep = () => setStep(prev => prev - 1);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,22 +51,47 @@ export default function CreateProfile() {
       return;
     }
     
+    const user = session?.user as SessionUser | undefined;
+    if (!user?.id) {
+      setError('User ID not found in session. Please try logging in again.');
+      return;
+    }
+
     try {
+      const profileData = {
+        ...formData,
+        age: parseInt(formData.age, 10),
+        userId: user.id,
+      };
+      console.log('Sending profile data:', profileData);
       const response = await fetch('/api/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(profileData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save profile');
+        const errorText = await response.text();
+        console.error('Server response:', response.status, errorText);
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || 'Failed to save profile';
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+          errorMessage = 'An unexpected error occurred';
+        }
+        throw new Error(errorMessage);
       }
 
-      router.push('/dashboard');
+      const result = await response.json();
+      console.log('Profile created successfully:', result);
+      router.push('/profiles');
     } catch (error) {
       console.error('Error creating profile:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred while creating your profile. Please try again.');
     }
   };
 
@@ -89,7 +118,6 @@ export default function CreateProfile() {
                   required
                 />
               </div>
-
               <div>
                 <label htmlFor="age" className="block text-sm font-medium text-gray-700">
                   Age
@@ -106,7 +134,6 @@ export default function CreateProfile() {
                   max="120"
                 />
               </div>
-
               <div>
                 <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
                   Gender
@@ -127,7 +154,6 @@ export default function CreateProfile() {
                   <option value="prefer-not-to-say">Prefer not to say</option>
                 </select>
               </div>
-
               <div>
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700">
                   City
@@ -145,7 +171,6 @@ export default function CreateProfile() {
             </div>
           </>
         );
-
       case 2:
         return (
           <>
@@ -181,7 +206,6 @@ export default function CreateProfile() {
             </div>
           </>
         );
-
       case 3:
         return (
           <>
@@ -227,6 +251,10 @@ export default function CreateProfile() {
     }
   };
 
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Complete Your Profile</h2>
@@ -246,6 +274,12 @@ export default function CreateProfile() {
           ))}
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {renderStep()}
@@ -271,3 +305,4 @@ export default function CreateProfile() {
     </div>
   );
 }
+
