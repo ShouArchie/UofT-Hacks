@@ -103,8 +103,8 @@ export default function MatchesPage() {
       <>
         <NavBar />
         <div className="flex flex-col h-screen items-center justify-center gap-4">
-          <Loader2 className="h-16 w-16 animate-spin text-[#FF661E]" />
-          <p className="text-xl font-medium text-[#FF661E]">
+          <Loader2 className="h-16 w-16 animate-spin text-[#FFEBD0]" />
+          <p className="text-xl font-medium text-[#FFEBD0]">
             {analyzing ? "Analyzing compatibility..." : "Loading matches..."}
           </p>
         </div>
@@ -179,16 +179,16 @@ export default function MatchesPage() {
                 <div className="mb-6 space-y-4">
                   <div>
                     <h3 className="font-semibold mb-2 text-[#FF661E]">About</h3>
-                    <p className="text-[#FF661E]">{match.bio}</p>
+                    <p className="text-black">{match.bio}</p>
                   </div>
                   <div>
                     <h3 className="font-semibold mb-2 text-[#FF661E]">Occupation</h3>
-                    <p className="text-[#FF661E]">{match.occupation}</p>
+                    <p className="text-black">{match.occupation}</p>
                   </div>
                   
                   <div>
                     <h3 className="font-semibold mb-2 text-[#FF661E]">Compatibility Analysis</h3>
-                    <p className="text-[#FF661E] mb-3">{match.compatibilityReason}</p>
+                    <p className="text-black mb-3">{match.compatibilityReason}</p>
                     
                     {match.keyStrengths && match.keyStrengths.length > 0 && (
                       <div className="mt-4">
