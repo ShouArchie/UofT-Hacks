@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions, DefaultSession } from 'next-auth'
+import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { PrismaClient } from '@prisma/client'
@@ -11,6 +11,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string
+      email: string
     } & DefaultSession["user"]
   }
 
@@ -32,7 +33,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null
+          throw new Error('Please enter an email and password')
         }
 
         const user = await prisma.user.findUnique({
@@ -40,13 +41,13 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
-          return null
+          throw new Error('No user found with this email')
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
-          return null
+          throw new Error('Invalid password')
         }
 
         return {
@@ -59,24 +60,27 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
+        token.email = user.email
       }
       return token
     },
     async session({ session, token }) {
       if (session?.user) {
-        session.user.id = token.id as string
+        session.user.email = token.email as string
       }
       return session
     },
   },
   pages: {
     signIn: '/login',
+    error: '/login',
   },
+  debug: process.env.NODE_ENV === 'development',
 }
 
 export default NextAuth(authOptions)

@@ -1,103 +1,141 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { PrismaClient } from '@prisma/client';
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      console.log('Unauthorized: No valid session found');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    console.log('Authenticated user:', session.user.id);
-
-    // Get current user's profile
-    const currentUserProfile = await prisma.profile.findUnique({
-      where: { userId: session.user.id },
-      include: { user: true }
-    });
-
-    if (!currentUserProfile) {
-      console.log('Profile not found for user:', session.user.id);
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    // Get all other profiles
-    const potentialMatches = await prisma.profile.findMany({
-      where: {
-        userId: { not: session.user.id },
-        // Add basic filtering
-        age: {
-          gte: currentUserProfile.age - 5,
-          lte: currentUserProfile.age + 5
-        },
-        city: currentUserProfile.city
-      },
+    // Get all profiles
+    const profiles = await prisma.profile.findMany({
       include: {
         user: {
           select: {
-            id: true,
+            email: true,
             name: true,
             image: true,
-            email: true
           }
         }
       }
     });
 
-    if (potentialMatches.length === 0) {
-      console.log('No potential matches found for user:', session.user.id);
-      return NextResponse.json([]);
-    }
+    // Separate Toronto and non-Toronto profiles
+    const torontoProfiles = profiles.filter(profile => 
+      profile.city?.toLowerCase().includes('toronto'));
+    const otherProfiles = profiles.filter(profile => 
+      !profile.city?.toLowerCase().includes('toronto'));
 
-    // Use Gemini to analyze compatibility
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // Modified prompt to encourage more varied scores
+    const prompt = `As a matchmaker, rate these dating profiles' compatibility with someone who:
+- Lives in Toronto (give Toronto residents +30 points automatically)
+- Values positive communication during breakups
+- Believes in working through issues together
 
-    const prompt = `
-      Given a user with the following profile:
-      Age: ${currentUserProfile.age}
-      Gender: ${currentUserProfile.gender}
-      Bio: ${currentUserProfile.bio}
-      Occupation: ${currentUserProfile.occupation}
-      Debate Style: ${currentUserProfile.debateStyle}
-      Communication Preference: ${currentUserProfile.communicationPreference}
-      Conflict Answers: ${currentUserProfile.conflictAnswers}
+Rate each profile from 0-100, ensuring scores are well-distributed and distinct.
+Guidelines:
+- Toronto residents: 70-100 range
+- Strong communicators: +20 points
+- Growth mindset: +20 points
+- Non-Toronto but nearby: 40-70 range
+- Others: 0-40 range
 
-      Rank the following potential matches from 0-100 based on compatibility.
-      Return only a JSON array of objects with 'userId' and 'score' properties.
-      
-      Potential matches:
-      ${JSON.stringify(potentialMatches)}
-    `;
+Return a JSON array with objects in this exact format:
+[
+  {
+    "id": "profile_id",
+    "score": number (make sure scores are different for each profile),
+    "reason": "One clear sentence about why this score was given"
+  }
+]
 
+Profiles to analyze:
+${JSON.stringify([...torontoProfiles, ...otherProfiles], null, 2)}`;
+
+    // Get Gemini's analysis
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const rankings = JSON.parse(response.text());
-
-    // Sort matches by score and attach full profile data
-    const rankedMatches = rankings
-      .sort((a: any, b: any) => b.score - a.score)
-      .map((rank: any) => {
-        const match = potentialMatches.find(p => p.user.id === rank.userId);
-        return {
-          ...match,
-          compatibilityScore: rank.score
-        };
-      });
-
-    console.log('Successfully fetched and ranked matches for user:', session.user.id);
-    return NextResponse.json(rankedMatches);
+    const rankingText = response.text();
     
+    // Log Gemini's output to the terminal
+    console.log('\n=== Gemini Analysis ===');
+    console.log(rankingText);
+    console.log('=====================\n');
+    
+    try {
+      // Parse Gemini's response and combine with profile data
+      const rankings = JSON.parse(rankingText);
+      
+      // Process Toronto profiles first, then others
+      const rankedTorontoProfiles = torontoProfiles.map(profile => {
+        const ranking = rankings.find((r: any) => r.id === profile.id) || {
+          score: 0,
+          reason: 'Analysis not available'
+        };
+        return {
+          ...profile,
+          compatibilityScore: ranking.score,
+          compatibilityReason: ranking.reason,
+          isFromToronto: true
+        };
+      }).sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+      const rankedOtherProfiles = otherProfiles.map(profile => {
+        const ranking = rankings.find((r: any) => r.id === profile.id) || {
+          score: 0,
+          reason: 'Analysis not available'
+        };
+        return {
+          ...profile,
+          compatibilityScore: ranking.score,
+          compatibilityReason: ranking.reason,
+          isFromToronto: false
+        };
+      }).sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+      // Combine the sorted arrays with Toronto profiles first
+      const allRankedProfiles = [...rankedTorontoProfiles, ...rankedOtherProfiles];
+
+      // Add index information for profile navigation
+      const profilesWithNavigation = allRankedProfiles.map((profile, index) => ({
+        ...profile,
+        totalProfiles: allRankedProfiles.length,
+        currentIndex: index + 1,
+        hasNext: index < allRankedProfiles.length - 1,
+        hasPrevious: index > 0
+      }));
+
+      return NextResponse.json(profilesWithNavigation);
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+      console.error('Raw Gemini response:', rankingText);
+      // If parsing fails, return basic sorted profiles
+      const sortedProfiles = [
+        ...torontoProfiles.map(p => ({ 
+          ...p, 
+          isFromToronto: true,
+          compatibilityScore: p.city?.toLowerCase().includes('toronto') ? 80 : 50,
+          compatibilityReason: 'Basic compatibility score based on location'
+        })),
+        ...otherProfiles.map(p => ({ 
+          ...p, 
+          isFromToronto: false,
+          compatibilityScore: 50,
+          compatibilityReason: 'Basic compatibility score based on location'
+        }))
+      ];
+      return NextResponse.json(sortedProfiles);
+    }
+
   } catch (error) {
-    console.error('Error fetching matches:', error);
-    return NextResponse.json({ error: 'Failed to fetch matches' }, { status: 500 });
+    console.error('Error in matches route:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

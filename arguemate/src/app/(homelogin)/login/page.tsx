@@ -24,6 +24,7 @@ const ArgueMateAuthPage: React.FC = () => {
           redirect: false,
           email,
           password,
+          callbackUrl: '/profiles'
         })
         
         if (result?.error) {
@@ -31,8 +32,11 @@ const ArgueMateAuthPage: React.FC = () => {
           return
         }
 
-        // If login successful, redirect to profiles
-        router.push('/profiles')
+        if (result?.ok) {
+          // Wait for session to be updated before redirecting
+          await new Promise(resolve => setTimeout(resolve, 500))
+          router.push('/profiles')
+        }
 
       } catch (error) {
         console.error('Login error:', error)
