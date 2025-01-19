@@ -154,7 +154,7 @@ export default function MatchesPage() {
                       />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">{match.user.name}</h2>
+                      <h2 className="text-2xl font-bold text-[#FF661E]">{match.user.name}</h2>
                       <div className="flex items-center gap-2 text-gray-600 mt-1">
                         <MapPin className="h-4 w-4" />
                         <span>{match.city}</span>
@@ -178,17 +178,17 @@ export default function MatchesPage() {
 
                 <div className="mb-6 space-y-4">
                   <div>
-                    <h3 className="font-semibold mb-2">About</h3>
-                    <p className="text-gray-600">{match.bio}</p>
+                    <h3 className="font-semibold mb-2 text-[#FF661E]">About</h3>
+                    <p className="text-[#FF661E]">{match.bio}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-2">Occupation</h3>
-                    <p className="text-gray-600">{match.occupation}</p>
+                    <h3 className="font-semibold mb-2 text-[#FF661E]">Occupation</h3>
+                    <p className="text-[#FF661E]">{match.occupation}</p>
                   </div>
                   
                   <div>
-                    <h3 className="font-semibold mb-2">Compatibility Analysis</h3>
-                    <p className="text-gray-600 mb-3">{match.compatibilityReason}</p>
+                    <h3 className="font-semibold mb-2 text-[#FF661E]">Compatibility Analysis</h3>
+                    <p className="text-[#FF661E] mb-3">{match.compatibilityReason}</p>
                     
                     {match.keyStrengths && match.keyStrengths.length > 0 && (
                       <div className="mt-4">
