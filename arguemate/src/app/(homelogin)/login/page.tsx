@@ -24,7 +24,7 @@ const ArgueMateAuthPage: React.FC = () => {
           redirect: false,
           email,
           password,
-          callbackUrl: '/profiles'
+          callbackUrl: '/matches'
         })
         
         if (result?.error) {
@@ -35,7 +35,7 @@ const ArgueMateAuthPage: React.FC = () => {
         if (result?.ok) {
           // Wait for session to be updated before redirecting
           await new Promise(resolve => setTimeout(resolve, 500))
-          router.push('/profiles')
+          router.push('/matches')
         }
 
       } catch (error) {

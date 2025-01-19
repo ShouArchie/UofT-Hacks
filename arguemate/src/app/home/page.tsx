@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion, useAnimation } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 const PuzzleWord = ({ word }: { word: string }) => {
   const controls = useAnimation();
@@ -64,6 +65,13 @@ const FeatureIcon = ({ Icon, text }: { Icon: React.ElementType; text: string }) 
 
 export default function Home() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/matches');
+    }
+  }, [status, router]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#FF8D58] text-[#FFEBD0] p-4 font-['Poppins']">

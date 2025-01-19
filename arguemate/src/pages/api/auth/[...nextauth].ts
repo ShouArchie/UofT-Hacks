@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from 'next-auth'
+import NextAuth, { NextAuthOptions, DefaultSession } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { PrismaClient } from '@prisma/client'
@@ -12,13 +12,14 @@ declare module "next-auth" {
     user: {
       id: string
       email: string
+      name: string | null
     } & DefaultSession["user"]
   }
 
   interface User {
     id: string
     email: string
-    name?: string | null
+    name: string | null
   }
 }
 
@@ -54,7 +55,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-        }
+        } as any // Using type assertion since we know the shape matches User
       }
     })
   ],
@@ -65,13 +66,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id
         token.email = user.email
+        token.name = user.name
       }
       return token
     },
     async session({ session, token }) {
       if (session?.user) {
+        session.user.id = token.id as string
         session.user.email = token.email as string
+        session.user.name = token.name as string | null
       }
       return session
     },
@@ -80,6 +85,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/login',
   },
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
 }
 

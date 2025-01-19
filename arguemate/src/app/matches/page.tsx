@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { Loader2, MessageSquare, AlertCircle, MapPin, Heart } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 interface Match {
   user: {
@@ -26,6 +28,8 @@ interface Match {
 }
 
 export default function MatchesPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -57,8 +61,16 @@ export default function MatchesPage() {
   }
 
   useEffect(() => {
-    fetchMatches()
-  }, [])
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchMatches()
+    }
+  }, [status])
 
   // Load more profiles when bottom is in view
   useEffect(() => {
@@ -67,12 +79,16 @@ export default function MatchesPage() {
     }
   }, [inView, matches.length])
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
+  }
+
+  if (status === 'unauthenticated') {
+    return null // Will redirect in useEffect
   }
 
   if (error) {
