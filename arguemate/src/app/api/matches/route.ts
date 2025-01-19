@@ -75,7 +75,7 @@ export async function GET(req: Request) {
 Questions: ${userQuestions.join('\n')}
 Answers: ${userAnswers.join('\n')}
 
-Rate from 0-100 and Write a short blurb about the person and why we are compatible romantically and would be a good couple, try and extrpolate from our answers to questions.
+Rate from 0-100 and Write a blurb about the person and why we are compatible romantically and would be a good couple, try and extrpolate from our answers to questions.
 Guidelines:
 - Location match (same city)
 - Age compatibility (within 5 years)
