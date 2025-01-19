@@ -98,30 +98,15 @@ export default function MatchesPage() {
     }
   }, [inView, matches.length])
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || loading || analyzing) {
     return (
       <>
         <NavBar />
         <div className="flex flex-col h-screen items-center justify-center gap-4">
           <Loader2 className="h-16 w-16 animate-spin text-[#FF8D58]" />
-          <p className="text-xl font-medium text-[#FF8D58]">Loading matches...</p>
-        </div>
-      </>
-    )
-  }
-
-  if (analyzing) {
-    return (
-      <>
-        <NavBar />
-        <div className="flex flex-col h-screen items-center justify-center gap-4">
-          <div className="flex gap-2 items-center">
-            <Loader2 className="h-16 w-16 animate-spin text-[#FF8D58]" />
-            <div className="flex flex-col">
-              <p className="text-xl font-medium text-[#FF8D58]">Analyzing compatibility...</p>
-              <p className="text-sm text-gray-600">Using AI to find your perfect matches</p>
-            </div>
-          </div>
+          <p className="text-xl font-medium text-[#FF8D58]">
+            {analyzing ? "Analyzing compatibility..." : "Loading matches..."}
+          </p>
         </div>
       </>
     )
@@ -139,18 +124,6 @@ export default function MatchesPage() {
           <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
           <h2 className="text-2xl font-bold mb-2">Error Loading Matches</h2>
           <p className="text-gray-600">{error}</p>
-        </div>
-      </>
-    )
-  }
-
-  if (matches.length === 0) {
-    return (
-      <>
-        <NavBar />
-        <div className="flex flex-col h-screen items-center justify-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-[#FF8D58]" />
-          <p className="text-lg font-medium text-[#FF8D58]">Finding your matches...</p>
         </div>
       </>
     )
