@@ -3,17 +3,14 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-type Props = {
-  params: {
-    userId: string
-  }
-}
-
-export async function GET(request: NextRequest, context: Props) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
   try {
     const profile = await prisma.profile.findUnique({
       where: {
-        userId: context.params.userId
+        userId: params.userId
       }
     })
 
