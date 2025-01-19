@@ -114,7 +114,10 @@ export default function MatchesPage() {
     <div className="container mx-auto py-8 px-4">
       <h1 className="mb-8 text-3xl font-bold text-center">Your Matches</h1>
       <div className="space-y-8">
-        {matches.slice(0, displayedCount).map((match, index) => (
+        {matches
+          .sort((a, b) => (b.compatibilityScore || 0) - (a.compatibilityScore || 0))
+          .slice(0, displayedCount)
+          .map((match, index) => (
           <div 
             key={match.user.id} 
             className="max-w-2xl mx-auto overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg transition-all duration-300 hover:shadow-xl"
