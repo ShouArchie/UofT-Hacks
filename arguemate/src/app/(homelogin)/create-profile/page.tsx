@@ -103,9 +103,10 @@ export default function CreateProfile() {
       return;
     }
 
-    const user = session?.user as SessionUser | undefined;
-    if (!user?.id) {
-      setError("User ID not found in session. Please try logging in again.");
+    // Get user email from session
+    const userEmail = session?.user?.email;
+    if (!userEmail) {
+      setError("User email not found in session. Please try logging in again.");
       return;
     }
 
@@ -116,15 +117,36 @@ export default function CreateProfile() {
       return;
     }
 
-    const profileData = {
-      userId: user.id,
-      ...formData,
-      age: parseInt(formData.age, 10),
-      conflictQuestions: formData.questions,
-      conflictAnswers: formData.answers,
-    };
-
     try {
+      // First, get the user ID using the email
+      const userResponse = await fetch('/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: userEmail }),
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user ID');
+      }
+
+      const userData = await userResponse.json();
+      const userId = userData.id;
+
+      if (!userId) {
+        setError("Could not find user ID. Please try logging in again.");
+        return;
+      }
+
+      const profileData = {
+        userId: userId,
+        ...formData,
+        age: parseInt(formData.age, 10),
+        conflictQuestions: formData.questions,
+        conflictAnswers: formData.answers,
+      };
+
       const result = await createProfile(profileData);
 
       if (result.success) {
