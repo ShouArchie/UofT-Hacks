@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader2, MessageSquare, AlertCircle, MapPin, Heart } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import NavBar from '@/components/NavBar'
 
 interface Match {
@@ -30,14 +31,13 @@ interface Match {
 }
 
 export default function MatchesPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [displayedCount, setDisplayedCount] = useState(1)
   
-  // Setup intersection observer for infinite scroll
   const { ref: bottomRef, inView } = useInView({
     threshold: 0.5,
   })
@@ -74,12 +74,11 @@ export default function MatchesPage() {
     }
   }, [status])
 
-  // Load more profiles when bottom is in view
   useEffect(() => {
     if (inView && displayedCount < matches.length) {
       setDisplayedCount(prev => Math.min(prev + 1, matches.length))
     }
-  }, [inView, matches.length])
+  }, [inView, matches.length, displayedCount])
 
   if (status === 'loading' || loading) {
     return (
@@ -131,7 +130,7 @@ export default function MatchesPage() {
           {matches
             .sort((a, b) => (b.compatibilityScore || 0) - (a.compatibilityScore || 0))
             .slice(0, displayedCount)
-            .map((match, index) => (
+            .map(match => (
             <div 
               key={match.user.id} 
               className="max-w-2xl mx-auto overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg transition-all duration-300 hover:shadow-xl"
@@ -140,9 +139,11 @@ export default function MatchesPage() {
                 <div className="mb-6 flex items-center gap-6 justify-between">
                   <div className="flex items-center gap-6">
                     <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-primary/10">
-                      <img 
+                      <Image 
                         src={match.user.image || '/placeholder.svg'} 
                         alt={match.user.name || 'User'} 
+                        width={96}
+                        height={96}
                         className="h-full w-full object-cover"
                       />
                     </div>

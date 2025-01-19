@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
 const prisma = new PrismaClient();
 
@@ -20,18 +22,19 @@ const getRandomPhoto = () => {
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
     const profiles = await prisma.profile.findMany({
-      select: {
-        id: true,
-        preferredName: true,
-        age: true,
-        gender: true,
-        city: true,
-        bio: true,
-        occupation: true,
-        debateStyle: true,
-        image: true,
-      },
+      where: {
+        user: {
+          email: {
+            not: session.user.email
+          }
+        }
+      }
     });
 
     // Map through profiles and add photos where missing
@@ -41,7 +44,12 @@ export async function GET() {
     }));
 
     return NextResponse.json(profilesWithPhotos);
-  } catch (error) {
-    // ... existing error handling ...
+  } catch {
+    return NextResponse.json(
+      { error: 'Failed to fetch profiles' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
 }
