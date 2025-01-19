@@ -31,8 +31,8 @@ const ArgueMateAuthPage: React.FC = () => {
           return
         }
 
-        // If login successful, redirect to home
-        router.push('/home')
+        // If login successful, redirect to profiles
+        router.push('/profiles')
 
       } catch (error) {
         console.error('Login error:', error)
