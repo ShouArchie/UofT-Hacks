@@ -28,17 +28,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${poppins.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
-      >
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+      <body className={poppins.className}>{children}</body>
     </html>
   );
 }
+
+import './globals.css';
+
+
+
+
+
 
