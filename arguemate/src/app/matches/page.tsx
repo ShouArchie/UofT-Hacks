@@ -18,7 +18,7 @@ interface Match {
 }
 
 export default function MatchesPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,9 +28,12 @@ export default function MatchesPage() {
       try {
         const response = await fetch('/api/matches')
         if (!response.ok) {
-          throw new Error('Failed to fetch matches')
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
+        if (data.error) {
+          throw new Error(data.error)
+        }
         if (!Array.isArray(data)) {
           throw new Error('Invalid data format received from API')
         }
@@ -45,12 +48,15 @@ export default function MatchesPage() {
       }
     }
 
-    if (session?.user) {
+    if (status === 'authenticated') {
       fetchMatches()
+    } else if (status === 'unauthenticated') {
+      setLoading(false)
+      setError('Please log in to view matches')
     }
-  }, [session])
+  }, [status])
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

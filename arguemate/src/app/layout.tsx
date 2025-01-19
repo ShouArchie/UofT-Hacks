@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Azeret_Mono as Geist_Mono } from 'next/font/google';
 import { Poppins } from 'next/font/google';
-import { AuthProvider } from '@/components/AuthProvider';
+import { Providers } from '@/components/Providers';
 import "./globals.css";
 
 const poppins = Poppins({
@@ -33,15 +33,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={poppins.className}>{children}</body>
+      <body className={`${poppins.className} ${geistSans.variable} ${geistMono.variable}`}>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }
-
-import './globals.css';
-
-
-
-
-
 

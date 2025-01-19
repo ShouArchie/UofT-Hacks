@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from 'next-auth'
+import NextAuth, { DefaultSession, NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { PrismaClient } from '@prisma/client'
@@ -15,7 +15,7 @@ declare module "next-auth" {
   }
 }
 
-export default NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -71,5 +71,7 @@ export default NextAuth({
   pages: {
     signIn: '/login',
   },
-})
+}
+
+export default NextAuth(authOptions)
 

@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { PrismaClient } from '@prisma/client';
-import { authOptions } from '@../../../src/pages/api/auth/[...nextauth]'
+import { authOptions } from '@/pages/api/auth/[...nextauth]'
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
