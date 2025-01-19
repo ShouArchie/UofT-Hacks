@@ -147,11 +147,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Profile created successfully', profile }, { status: 201 });
     } catch (dbError) {
       console.error('Error creating profile in database:', dbError);
-      return NextResponse.json({ message: 'Error creating profile in database', error: dbError.message }, { status: 500 });
+      return NextResponse.json({ 
+        message: 'Error creating profile in database', 
+        error: dbError instanceof Error ? dbError.message : 'Database error occurred'
+      }, { status: 500 });
     }
   } catch (error) {
     console.error('Error in profile creation:', error);
-    return NextResponse.json({ message: 'An unknown error occurred during profile creation', error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'An unknown error occurred during profile creation', 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }

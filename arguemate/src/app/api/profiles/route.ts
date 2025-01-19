@@ -37,15 +37,14 @@ export async function GET() {
         bio: true,
         occupation: true,
         debateStyle: true,
-        communicationPreference: true,
-        image: true,
+        communicationPreference: true
       },
     });
 
     // Map through profiles and add photos where missing
     const profilesWithPhotos = profiles.map(profile => ({
       ...profile,
-      image: profile.image || getRandomPhoto()
+      image: getRandomPhoto()
     }));
 
     return NextResponse.json(profilesWithPhotos);

@@ -26,7 +26,7 @@ export async function createProfile(profileData: any) {
     return { success: true, profile }
   } catch (error) {
     console.error('Error creating profile:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'An unknown error occurred' }
   }
 }
 
