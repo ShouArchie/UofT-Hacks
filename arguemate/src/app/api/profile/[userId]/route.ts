@@ -3,14 +3,20 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+interface RouteParams {
+  params: {
+    userId: string
+  }
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  context: RouteParams
 ) {
   try {
     const profile = await prisma.profile.findUnique({
       where: {
-        userId: params.userId
+        userId: context.params.userId
       }
     })
 
