@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
 const prisma = new PrismaClient();
 
@@ -18,35 +20,73 @@ const getRandomPhoto = () => {
   return samplePhotos[randomIndex];
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const profiles = await prisma.profile.findMany({
-      select: {
-        id: true,
-        bio: true,
-        image: true,
-        userId: true,
-        createdAt: true,
-        updatedAt: true,
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
-        }
-      },
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { profile: true }
     });
 
-    // Map through profiles and add photos where missing
-    const profilesWithPhotos = profiles.map(profile => ({
-      ...profile,
-      image: profile.image || getRandomPhoto()
-    }));
+    if (!user?.profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
 
-    return NextResponse.json(profilesWithPhotos);
+    return NextResponse.json(user.profile);
   } catch (error) {
-    console.error('Error fetching profiles:', error);
-    return NextResponse.json({ message: 'Error fetching profiles', error: error.message }, { status: 500 });
+    console.error('Error fetching profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { profile: true }
+    });
+
+    if (!user?.profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    const data = await req.json();
+
+    const updatedProfile = await prisma.profile.update({
+      where: { userId: user.id },
+      data: {
+        age: data.age,
+        city: data.city,
+        bio: data.bio,
+        occupation: data.occupation,
+        communicationPreference: data.communicationPreference,
+        debateStyle: data.debateStyle,
+        conflictQuestions: data.conflictQuestions,
+        conflictAnswers: data.conflictAnswers
+      }
+    });
+
+    return NextResponse.json(updatedProfile);
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   } finally {
     await prisma.$disconnect();
   }
