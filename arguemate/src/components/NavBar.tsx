@@ -12,8 +12,8 @@ export default function NavBar() {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
       <div className="max-w-2xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex space-x-8">
+        <div className="flex justify-center items-center h-16">
+          <div className="flex space-x-12">
             <Link
               href="/matches"
               className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${

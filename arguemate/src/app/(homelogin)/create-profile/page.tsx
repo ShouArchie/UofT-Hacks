@@ -287,10 +287,10 @@ export default function CreateProfile() {
         return (
           <div className="space-y-4 animate-fadeIn text-center">
             <h2 className="text-4xl font-['Poppins'] font-light mb-2">
-              How do you like to debate?
+              What are your dating preferences?
             </h2>
             <p className="text-[#FF8D58]/70 mb-6 font-light">
-              Choose your preferred style
+              Choose gender preference for potential partners
             </p>
             <select
               name="debateStyle"
@@ -298,10 +298,11 @@ export default function CreateProfile() {
               onChange={handleChange}
               className="w-full text-2xl text-center font-['Poppins'] border-b-2 border-[#FF8D58]/20 focus:border-[#FF8D58] bg-transparent text-[#FF8D58] focus:outline-none transition-all duration-300 pb-2"
             >
-              <option value="">Select style</option>
-              <option value="casual">Casual Discussion</option>
-              <option value="formal">Formal Debate</option>
-              <option value="competitive">Competitive</option>
+              <option value="">Select gender preference</option>
+              <option value="casual">Man</option>
+              <option value="formal">Woman</option>
+              <option value="competitive">Non-binary</option>
+              <option value="all">All</option>
             </select>
           </div>
         );

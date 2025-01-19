@@ -103,8 +103,8 @@ export default function MatchesPage() {
       <>
         <NavBar />
         <div className="flex flex-col h-screen items-center justify-center gap-4">
-          <Loader2 className="h-16 w-16 animate-spin text-[#FF8D58]" />
-          <p className="text-xl font-medium text-[#FF8D58]">
+          <Loader2 className="h-16 w-16 animate-spin text-[#FF661E]" />
+          <p className="text-xl font-medium text-[#FF661E]">
             {analyzing ? "Analyzing compatibility..." : "Loading matches..."}
           </p>
         </div>
