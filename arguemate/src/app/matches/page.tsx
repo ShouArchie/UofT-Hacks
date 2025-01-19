@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Loader2, MessageSquare, AlertCircle, MapPin, Heart } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
+import Link from 'next/link'
 
 interface Match {
   user: {
@@ -102,37 +103,37 @@ export default function MatchesPage() {
             key={match.user.id} 
             className="max-w-2xl mx-auto overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg transition-all duration-300 hover:shadow-xl"
           >
-            <div className="bg-primary text-white p-4">
-              <div className="text-center font-bold text-2xl mb-2">
-                {match.compatibilityScore || 0}% Match
-              </div>
-              <div className="text-center text-sm opacity-90">
-                {match.compatibilityReason}
-              </div>
-            </div>
-            
             <div className="p-8">
-              <div className="mb-6 flex items-center gap-6">
-                <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-primary/10">
-                  <img 
-                    src={match.user.image || '/placeholder.svg'} 
-                    alt={match.user.name || 'User'} 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">{match.user.name}</h2>
-                  <div className="flex items-center gap-2 text-gray-600 mt-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{match.city}</span>
-                    {match.isFromToronto && (
-                      <span className="ml-2 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
-                        Toronto Match
-                      </span>
-                    )}
+              <div className="mb-6 flex items-center gap-6 justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-primary/10">
+                    <img 
+                      src={match.user.image || '/placeholder.svg'} 
+                      alt={match.user.name || 'User'} 
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                  <p className="text-gray-600 mt-1">{match.age} years old</p>
+                  <div>
+                    <h2 className="text-2xl font-bold">{match.user.name}</h2>
+                    <div className="flex items-center gap-2 text-gray-600 mt-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{match.city}</span>
+                      {match.isFromToronto && (
+                        <span className="ml-2 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                          Toronto Match
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mt-1">{match.age} years old</p>
+                  </div>
                 </div>
+                
+                <Link 
+                  href={`/chat-window?userId=${match.user.id}`}
+                  className="flex items-center justify-center h-12 w-12 rounded-full bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors"
+                >
+                  <MessageSquare className="h-6 w-6" />
+                </Link>
               </div>
 
               <div className="mb-6 space-y-4">
@@ -190,12 +191,6 @@ export default function MatchesPage() {
                     {match.compatibilityScore || 0}% Compatible
                   </span>
                 </div>
-                <button 
-                  className="flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  Start Chat
-                </button>
               </div>
 
               <div className="mt-6 text-center text-sm text-gray-500">

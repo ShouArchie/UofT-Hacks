@@ -29,6 +29,7 @@ export async function GET(req: Request) {
     // Modified prompt to encourage more varied scores
     const prompt = `As a matchmaker, rate these dating profiles' compatibility with someone who:
 - Lives in Toronto (give Toronto residents +30 points automatically)
+- Aged 25
 - Values positive communication during breakups
 - Believes in working through issues together
 
