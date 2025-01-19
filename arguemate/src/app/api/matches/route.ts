@@ -7,13 +7,16 @@ import { authOptions } from '@/pages/api/auth/[...nextauth]'
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
+      console.log('Unauthorized: No valid session found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('Authenticated user:', session.user.id);
 
     // Get current user's profile
     const currentUserProfile = await prisma.profile.findUnique({
@@ -22,6 +25,7 @@ export async function GET() {
     });
 
     if (!currentUserProfile) {
+      console.log('Profile not found for user:', session.user.id);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
@@ -49,6 +53,7 @@ export async function GET() {
     });
 
     if (potentialMatches.length === 0) {
+      console.log('No potential matches found for user:', session.user.id);
       return NextResponse.json([]);
     }
 
@@ -87,6 +92,7 @@ export async function GET() {
         };
       });
 
+    console.log('Successfully fetched and ranked matches for user:', session.user.id);
     return NextResponse.json(rankedMatches);
     
   } catch (error) {

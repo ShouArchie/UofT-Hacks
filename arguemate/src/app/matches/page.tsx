@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Loader2, MessageSquare, AlertCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Match {
   user: {
@@ -18,22 +19,33 @@ interface Match {
 }
 
 export default function MatchesPage() {
+  const router = useRouter()
   const { data: session, status } = useSession()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    }
+  }, [status, router])
+
+  useEffect(() => {
     async function fetchMatches() {
+      if (status !== 'authenticated') return;
+
       try {
-        const response = await fetch('/api/matches')
+        const response = await fetch('/api/matches', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // This ensures cookies are sent with the request
+        })
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        if (data.error) {
-          throw new Error(data.error)
-        }
         if (!Array.isArray(data)) {
           throw new Error('Invalid data format received from API')
         }
@@ -50,11 +62,8 @@ export default function MatchesPage() {
 
     if (status === 'authenticated') {
       fetchMatches()
-    } else if (status === 'unauthenticated') {
-      setLoading(false)
-      setError('Please log in to view matches')
     }
-  }, [status])
+  }, [status, session])
 
   if (status === 'loading' || loading) {
     return (
