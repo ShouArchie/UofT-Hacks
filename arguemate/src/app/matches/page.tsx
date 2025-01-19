@@ -34,6 +34,7 @@ export default function MatchesPage() {
   const router = useRouter()
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+  const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [displayedCount, setDisplayedCount] = useState(1)
   
@@ -44,11 +45,26 @@ export default function MatchesPage() {
 
   const fetchMatches = async () => {
     try {
-      console.log('Fetching matches...')
+      setLoading(true)
+      setAnalyzing(true)
+      console.log('Fetching matches...', { session, status })
       const response = await fetch('/api/matches')
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const data = await response.json()
+        if (response.status === 401) {
+          console.log('Session expired, redirecting to login')
+          router.push('/login')
+          return
+        }
+        if (response.status === 404 && data.error === 'Please create a profile first') {
+          console.log('No profile found, redirecting to create profile')
+          router.push('/create-profile')
+          return
+        }
+        throw new Error(data.error || `HTTP error! status: ${response.status}`)
       }
+
       const data = await response.json()
       console.log('Matches data:', data)
       setMatches(data)
@@ -59,6 +75,7 @@ export default function MatchesPage() {
       setMatches([])
     } finally {
       setLoading(false)
+      setAnalyzing(false)
     }
   }
 
@@ -88,6 +105,23 @@ export default function MatchesPage() {
         <div className="flex flex-col h-screen items-center justify-center gap-4">
           <Loader2 className="h-16 w-16 animate-spin text-[#FF8D58]" />
           <p className="text-xl font-medium text-[#FF8D58]">Loading matches...</p>
+        </div>
+      </>
+    )
+  }
+
+  if (analyzing) {
+    return (
+      <>
+        <NavBar />
+        <div className="flex flex-col h-screen items-center justify-center gap-4">
+          <div className="flex gap-2 items-center">
+            <Loader2 className="h-16 w-16 animate-spin text-[#FF8D58]" />
+            <div className="flex flex-col">
+              <p className="text-xl font-medium text-[#FF8D58]">Analyzing compatibility...</p>
+              <p className="text-sm text-gray-600">Using AI to find your perfect matches</p>
+            </div>
+          </div>
         </div>
       </>
     )

@@ -34,6 +34,7 @@ export default function ChatWindow() {
   const [matchProfile, setMatchProfile] = useState<any>(null)
   const [fetchingProfile, setFetchingProfile] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isTyping, setIsTyping] = useState(false)
 
   useEffect(() => {
     const initializeProfile = async () => {
@@ -83,6 +84,7 @@ export default function ChatWindow() {
     setMessages(prev => [...prev, userMessage])
     setNewMessage('')
     setLoading(true)
+    setIsTyping(true)
 
     try {
       const response = await fetch('/api/chat', {
@@ -108,6 +110,7 @@ export default function ChatWindow() {
       console.error('Error sending message:', error)
     } finally {
       setLoading(false)
+      setIsTyping(false)
     }
   }
 
@@ -132,9 +135,9 @@ export default function ChatWindow() {
             <ArrowLeft className="h-6 w-6 text-gray-600 hover:text-[#FF8D58]" />
           </Link>
           <div>
-            <h2 className="font-semibold text-lg">{matchProfile.user.name}</h2>
-            <p className="text-sm text-gray-500">
-              {matchProfile.age} • {matchProfile.city}
+            <h2 className="font-semibold text-lg text-gray-900">{matchProfile?.user?.name || 'Sarah'}</h2>
+            <p className="text-sm text-gray-600">
+              {matchProfile?.age || '24'} • {matchProfile?.city || 'Toronto'}
             </p>
           </div>
         </div>
@@ -153,13 +156,24 @@ export default function ChatWindow() {
                     : 'bg-white text-gray-900'
                 }`}
               >
-                <p>{message.content}</p>
+                <p className="text-base">{message.content}</p>
                 <p className="text-xs opacity-70 mt-1">
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </p>
               </div>
             </div>
           ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white text-gray-900 rounded-lg px-4 py-2">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
+                </div>
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -171,7 +185,7 @@ export default function ChatWindow() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-[#FF8D58]"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-[#FF8D58] text-gray-900 placeholder-gray-500"
               disabled={loading}
             />
             <button
