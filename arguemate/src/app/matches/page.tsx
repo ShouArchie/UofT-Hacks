@@ -227,7 +227,7 @@ export default function MatchesPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Heart className={`h-5 w-5 ${(match.compatibilityScore || 0) >= 80 ? 'text-red-500' : 'text-gray-400'}`} />
-                    <span className="text-lg font-semibold text-primary">
+                    <span className="text-lg font-semibold text-primary text-[#FF661E]">
                       {match.compatibilityScore || 0}% Compatible
                     </span>
                   </div>
