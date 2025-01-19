@@ -1,24 +1,32 @@
-export default async function handler(req, res) {
+import { NextApiRequest, NextApiResponse } from 'next'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     if (req.method === "POST") {
       const { username, password } = req.body;
+      
+      const user = await prisma.user.findUnique({
+        where: { email: username }
+      });
 
-      // Query the database for user credentials (example query)
-      const [rows] = await db.query("SELECT * FROM users WHERE username = ? AND password = ?", [
-        username,
-        password,
-      ]);
-
-      if (rows.length > 0) {
-        res.status(200).json({ message: "Login successful", user: rows[0] });
-      } else {
-        res.status(401).json({ message: "Invalid credentials" });
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
-    } else {
-      res.status(405).json({ message: "Method Not Allowed" });
+
+      return res.status(200).json({ success: true });
     }
+    
+    return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error("Error accessing the database:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    console.error('Login error:', error instanceof Error ? error.message : 'Unknown error');
+    return res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    await prisma.$disconnect();
   }
 }

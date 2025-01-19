@@ -66,7 +66,7 @@ export async function GET(req: Request) {
     
     // Function to process a single profile
     const processProfile = async (profile: any, isFromToronto: boolean) => {
-      const prompt = `As a matchmaker for me, rate this specific profile's compatibility with someone who:
+      const prompt = `As a matchmaker for me, rate this specific profile's compatibility with me who:
 - Lives in ${currentUser.profile?.city || 'Unknown'}
 - Is ${currentUser.profile?.age || 'Unknown'} years old
 - Has this communication style: ${currentUser.profile?.communicationPreference || 'Unknown'}
