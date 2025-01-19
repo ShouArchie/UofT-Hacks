@@ -1,26 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const userId = params.userId
-
-    const profile = await prisma.profile.findFirst({
-      where: { userId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-      },
+    const profile = await prisma.profile.findUnique({
+      where: {
+        userId: params.userId
+      }
     })
 
     if (!profile) {
