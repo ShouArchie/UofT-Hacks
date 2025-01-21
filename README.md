@@ -1,4 +1,4 @@
-# Heading 1
+# ArgueMate
 Introducing ArgueMate - fix together to fit together.
 
 In a world where dating apps prioritize appearances and shared interests, ArgueMate offers a revolutionary approach to finding love. We recognized a critical gap in modern matchmaking, couples that match on dating apps often falter when faced with their first disagreement, realizing their conflict resolution styles clash. To build everlasting relationships, ArgueMate takes a new approach. By matching users based on their communication and problem-solving styles, we create connections that go beyond the surface. ArgueMate brings a new perspective to dating, where you fix together to fit together.
